@@ -162,31 +162,17 @@ async def stream_video(filename: str, request: Request):
                 except Exception:
                     pass
 
-        def chunk_generator(path, offset, length):
-            with open(path, "rb") as f:
-                f.seek(offset)
-                remaining = length
-                buffer_size = 64 * 1024
-                while remaining > 0:
-                    read_bytes = min(remaining, buffer_size)
-                    data = f.read(read_bytes)
-                    if not data:
-                        break
-                    remaining -= len(data)
-                    yield data
+        with open(file_path, "rb") as f:
+            f.seek(start)
+            data = f.read(chunk_length)
 
         headers = {
             "Content-Range": f"bytes {start}-{end}/{file_size}",
             "Accept-Ranges": "bytes",
-            "Content-Length": str(chunk_length),
+            "Content-Length": str(len(data)),
             "Content-Type": "video/mp4",
         }
-        return StreamingResponse(
-            chunk_generator(file_path, start, chunk_length),
-            status_code=206,
-            headers=headers,
-            media_type="video/mp4"
-        )
+        return Response(content=data, status_code=206, headers=headers, media_type="video/mp4")
     else:
         # Full content
         cluster_mgr.dispatch_chunk(filename, chunk_index=0, byte_size=file_size)
