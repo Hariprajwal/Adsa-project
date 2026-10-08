@@ -1,10 +1,9 @@
-# Project Implementation Blueprint: Entropy-Guided Hierarchical Load Balancing (P9)
-
-**Project Code:** P9  
+# Project Implementation Blueprint: Entropy-Guided Hierarchical Load Balancing
+ 
 **Subject:** Advanced Data Structures & Algorithms (ADSA) / High-Performance Computing (HPC)  
 **Author / Contact:** `Krhariprajwal.mitblr2026@learner.manipal.edu`  
 **Supervision:** Dr. Megha P Arakeri [MAHE-MITBLR]  
-**Documentation Reference:** [P9.md](file:///d:/downloads/ADSA%20Proj/P9.md)
+**Architecture:** Multi-Level Tree & Entropy Classification Engine  
 
 ---
 

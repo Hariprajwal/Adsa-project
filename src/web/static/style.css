@@ -1071,8 +1071,24 @@ body {
 }
 
 [data-theme="light"] .terminal-body {
-    background: #0f172a;
-    color: #e2e8f0;
+    background: #f1f5f9;
+    color: #1e293b;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .terminal-body .text-muted {
+    color: #64748b;
+}
+
+[data-theme="light"] .terminal-body .text-cyan {
+    color: #0284c7;
+    font-weight: 600;
+}
+
+[data-theme="light"] .terminal-body .text-emerald {
+    color: #059669;
+    font-weight: 600;
 }
 
 [data-theme="light"] .comp-box {
