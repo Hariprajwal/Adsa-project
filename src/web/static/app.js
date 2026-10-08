@@ -47,6 +47,40 @@ document.addEventListener("DOMContentLoaded", () => {
     const racksContainer = document.getElementById("racksContainer");
     const toastContainer = document.getElementById("toastContainer");
 
+    // --- Theme Management (Dark & Light Mode) ---
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    const sunIcon = document.getElementById("sunIcon");
+    const moonIcon = document.getElementById("moonIcon");
+    const themeToggleLabel = document.getElementById("themeToggleLabel");
+
+    function applyTheme(theme) {
+        if (theme === "light") {
+            document.documentElement.setAttribute("data-theme", "light");
+            if (sunIcon) sunIcon.style.display = "none";
+            if (moonIcon) moonIcon.style.display = "inline-block";
+            if (themeToggleLabel) themeToggleLabel.textContent = "Dark";
+        } else {
+            document.documentElement.removeAttribute("data-theme");
+            if (sunIcon) sunIcon.style.display = "inline-block";
+            if (moonIcon) moonIcon.style.display = "none";
+            if (themeToggleLabel) themeToggleLabel.textContent = "Light";
+        }
+        localStorage.setItem("entropy_theme", theme);
+        if (clusterState) renderClusterTreeSvg(clusterState);
+    }
+
+    const savedTheme = localStorage.getItem("entropy_theme") || "dark";
+    applyTheme(savedTheme);
+
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener("click", () => {
+            const currentTheme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+            const newTheme = currentTheme === "light" ? "dark" : "light";
+            applyTheme(newTheme);
+            showToast(`Switched to ${newTheme.toUpperCase()} mode`, "info");
+        });
+    }
+
     // --- WebSocket Connection ---
     function initWebSocket() {
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -214,11 +248,16 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
 
+        // Theme-aware SVG styling
+        const isLight = document.documentElement.getAttribute("data-theme") === "light";
+        const nodeFill = isLight ? "#ffffff" : "#1e293b";
+        const leafFill = isLight ? "#f8fafc" : "#0f172a";
+
         // Draw Root Node
         const rootCpu = state.root.avg_cpu || 0;
         nodesHtml += `
             <g id="svg_node_root" class="tree-node-group">
-                <circle cx="${rootPos.x}" cy="${rootPos.y}" r="22" fill="#1e293b" stroke="var(--blue)" stroke-width="2.5" class="tree-node-circle" />
+                <circle cx="${rootPos.x}" cy="${rootPos.y}" r="22" fill="${nodeFill}" stroke="var(--blue)" stroke-width="2.5" class="tree-node-circle" />
                 <text x="${rootPos.x}" y="${rootPos.y + 4}" class="tree-node-text">ROOT</text>
                 <text x="${rootPos.x}" y="${rootPos.y + 36}" class="tree-node-subtext">Avg ${rootCpu}%</text>
             </g>
@@ -230,7 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const strokeColor = rData.avg_cpu > 70 ? "var(--rose)" : rData.avg_cpu > 40 ? "var(--amber)" : "var(--violet)";
             nodesHtml += `
                 <g id="svg_node_rack_${rack.id}" class="tree-node-group">
-                    <circle cx="${rack.x}" cy="${rack.y}" r="17" fill="#1e293b" stroke="${strokeColor}" stroke-width="2" class="tree-node-circle" />
+                    <circle cx="${rack.x}" cy="${rack.y}" r="17" fill="${nodeFill}" stroke="${strokeColor}" stroke-width="2" class="tree-node-circle" />
                     <text x="${rack.x}" y="${rack.y + 4}" class="tree-node-text">R${rack.id}</text>
                     <text x="${rack.x}" y="${rack.y + 28}" class="tree-node-subtext">${rData.avg_cpu}%</text>
                 </g>
@@ -243,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const fillColor = cpu > 75 ? "var(--rose)" : cpu > 45 ? "var(--amber)" : "var(--emerald)";
             nodesHtml += `
                 <g id="svg_node_compute_${node.id}" class="tree-node-group">
-                    <circle id="node_circle_${node.id}" cx="${node.x}" cy="${node.y}" r="12" fill="#0f172a" stroke="${fillColor}" stroke-width="2" class="tree-node-circle" />
+                    <circle id="node_circle_${node.id}" cx="${node.x}" cy="${node.y}" r="12" fill="${leafFill}" stroke="${fillColor}" stroke-width="2" class="tree-node-circle" />
                     <text x="${node.x}" y="${node.y + 3}" class="tree-node-text" style="font-size: 8px;">N${node.id}</text>
                     <text x="${node.x}" y="${node.y + 22}" class="tree-node-subtext" style="font-size: 8px;">${Math.round(cpu)}%</text>
                 </g>
