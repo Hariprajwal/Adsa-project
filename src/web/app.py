@@ -81,7 +81,10 @@ async def serve_index():
     if not index_file.exists():
         return HTMLResponse("<h2>Frontend building in progress...</h2>")
     with open(index_file, "r", encoding="utf-8") as f:
-        return HTMLResponse(f.read())
+        return HTMLResponse(
+            f.read(),
+            headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
+        )
 
 @app.get("/api/videos")
 async def list_videos():

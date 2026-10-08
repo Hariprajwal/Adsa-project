@@ -8,7 +8,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2.2">
+    <script>
+        // Immediate theme initialization to prevent flash and ensure light mode persistence
+        (function() {
+            var theme = localStorage.getItem("entropy_theme") || "dark";
+            if (theme === "light") {
+                document.documentElement.setAttribute("data-theme", "light");
+            }
+        })();
+    </script>
 </head>
 <body>
     <!-- Top Navigation & Global Telemetry Header -->
@@ -373,6 +382,6 @@
     <!-- Notification Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=2.2"></script>
 </body>
 </html>
