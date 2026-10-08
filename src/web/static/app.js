@@ -1,4 +1,4 @@
-// Entropy-Guided Cluster Video Streamer - Client Engine (ADSA P9)
+// Entropy-Guided Cluster Video Streamer - Client Telemetry Engine
 document.addEventListener("DOMContentLoaded", () => {
     // --- State & DOM References ---
     let ws = null;

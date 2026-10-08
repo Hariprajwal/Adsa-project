@@ -3,30 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entropy-Guided Cluster Video Streamer | ADSA P9</title>
-    <!-- Modern Typography -->
+    <title>Entropy-Guided Cluster Video Streamer | Distributed Systems Dashboard</title>
+    <!-- Google Fonts: Outfit (modern display) & JetBrains Mono (high-precision telemetry) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <!-- Top Glassmorphism Navigation Bar -->
+    <!-- Top Navigation & Global Telemetry Header -->
     <header class="navbar">
         <div class="nav-brand">
             <div class="brand-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
                     <polyline points="2 17 12 22 22 17"></polyline>
                     <polyline points="2 12 12 17 22 12"></polyline>
                 </svg>
             </div>
             <div>
-                <h1>ENTROPY-STREAM <span class="badge-tag">P9 ADSA</span></h1>
-                <p class="brand-sub">Entropy-Guided Hierarchical Tree Load Balancer & Live Video Delivery</p>
+                <div class="brand-title-wrap">
+                    <h1>ENTROPY-STREAM</h1>
+                    <span class="badge-tag">HPC CLUSTER</span>
+                </div>
+                <p class="brand-sub">Hierarchical Tree Load Balancing & Real-Time Video Delivery</p>
             </div>
         </div>
 
+        <!-- Global Cluster Status Telemetry Pills -->
         <div class="nav-metrics">
             <div class="metric-pill">
                 <span class="pill-label">Cluster Status</span>
@@ -36,7 +40,7 @@
             </div>
 
             <div class="metric-pill">
-                <span class="pill-label">Cluster Entropy H(S)</span>
+                <span class="pill-label">Shannon Entropy H(S)</span>
                 <span class="pill-value text-cyan font-mono" id="entropyValuePill">0.000</span>
             </div>
 
@@ -46,23 +50,24 @@
             </div>
         </div>
 
+        <!-- Real-Time Interactive Controls -->
         <div class="nav-actions">
             <button id="btnBurst" class="btn btn-warning" title="Spike load on a rack to trigger entropy transition">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
                 Inject Burst Spike
             </button>
-            <button id="btnRebalance" class="btn btn-primary" title="Execute Algorithm 3 Periodic Rebalancing">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button id="btnRebalance" class="btn btn-primary" title="Execute Algorithm 3 Dynamic Rebalancing">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                     <polyline points="23 4 23 10 17 10"></polyline>
                     <polyline points="1 20 1 14 7 14"></polyline>
                     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
                 </svg>
-                Alg 3 Rebalance
+                Dynamic Rebalance
             </button>
-            <button id="btnSimulateStream" class="btn btn-accent" title="Simulate 25 rapid chunk requests">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button id="btnSimulateStream" class="btn btn-accent" title="Simulate 20 rapid stream chunk requests">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                     <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>
                 Simulate Traffic
@@ -70,7 +75,7 @@
         </div>
     </header>
 
-    <!-- Main Dashboard Grid -->
+    <!-- Main 3-Column Power Dashboard -->
     <main class="dashboard-grid">
         
         <!-- LEFT COLUMN: Video Ingestion & HTML5 Stream Player -->
@@ -80,21 +85,19 @@
             <div class="glass-card player-card">
                 <div class="card-header">
                     <div class="card-title-group">
-                        <svg class="card-icon text-cyan" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
-                            <line x1="7" y1="2" x2="7" y2="22"></line>
-                            <line x1="17" y1="2" x2="17" y2="22"></line>
-                            <line x1="2" y1="12" x2="22" y2="12"></line>
-                            <line x1="2" y1="7" x2="7" y2="7"></line>
-                            <line x1="2" y1="17" x2="7" y2="17"></line>
-                            <line x1="17" y1="17" x2="22" y2="17"></line>
-                            <line x1="17" y1="7" x2="22" y2="7"></line>
-                        </svg>
-                        <h2>Live Video Stream</h2>
+                        <span class="icon-bubble bubble-cyan">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                        </span>
+                        <div>
+                            <h2>Live Video Stream</h2>
+                            <span class="card-sub-hint">HTTP 206 Partial Content Delivery</span>
+                        </div>
                     </div>
                     <div class="video-selector-wrap">
-                        <select id="videoSelect" class="custom-select">
-                            <option value="demo_stream.mp4">demo_stream.mp4 (Default HD)</option>
+                        <select id="videoSelect" class="custom-select" title="Choose Video Stream">
+                            <option value="demo_stream.mp4">demo_stream.mp4</option>
                         </select>
                     </div>
                 </div>
@@ -107,15 +110,15 @@
                     <!-- Floating Stream Telemetry HUD -->
                     <div class="video-hud">
                         <div class="hud-item">
-                            <span class="hud-label">Stream:</span>
+                            <span class="hud-label">File:</span>
                             <span class="hud-val font-mono" id="hudVideoName">demo_stream.mp4</span>
                         </div>
                         <div class="hud-item">
-                            <span class="hud-label">Latest Chunk:</span>
+                            <span class="hud-label">Chunk:</span>
                             <span class="hud-val font-mono text-cyan" id="hudChunkId">Chunk #0</span>
                         </div>
                         <div class="hud-item">
-                            <span class="hud-label">Routed To:</span>
+                            <span class="hud-label">Routed:</span>
                             <span class="hud-val font-mono text-emerald" id="hudAssignedNode">Node_0 (Rack_0)</span>
                         </div>
                     </div>
@@ -143,12 +146,17 @@
             <div class="glass-card upload-card">
                 <div class="card-header">
                     <div class="card-title-group">
-                        <svg class="card-icon text-violet" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                        <h2>Upload & Ingest Video</h2>
+                        <span class="icon-bubble bubble-violet">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </span>
+                        <div>
+                            <h2>Upload & Ingest Video</h2>
+                            <span class="card-sub-hint">Auto-chunked & dynamically balanced</span>
+                        </div>
                     </div>
                 </div>
 
@@ -156,14 +164,14 @@
                     <input type="file" id="videoFileInput" accept="video/mp4,video/webm,video/mkv,video/mov" hidden>
                     <div class="dropzone-content">
                         <div class="upload-icon-anim">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
                                 <polyline points="21 15 16 10 5 21"></polyline>
                             </svg>
                         </div>
-                        <p class="drop-title">Drag & drop your video file here</p>
-                        <p class="drop-sub">Supported formats: MP4, WEBM, MKV (Auto chunked & balanced across cluster)</p>
+                        <p class="drop-title">Drag & drop your video here</p>
+                        <p class="drop-sub">Supported formats: MP4, WEBM, MKV, MOV</p>
                         <button type="button" class="btn btn-outline" id="btnBrowseFiles">Browse Files</button>
                     </div>
                 </div>
@@ -187,24 +195,29 @@
             <div class="glass-card tree-card">
                 <div class="card-header">
                     <div class="card-title-group">
-                        <svg class="card-icon text-cyan" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="5" r="3"></circle>
-                            <circle cx="6" cy="19" r="3"></circle>
-                            <circle cx="18" cy="19" r="3"></circle>
-                            <path d="M12 8v4M6 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                        <h2>Hierarchical Cluster Tree (O(log N) Topology)</h2>
+                        <span class="icon-bubble bubble-cyan">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="5" r="3"></circle>
+                                <circle cx="6" cy="19" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <path d="M12 8v4M6 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </span>
+                        <div>
+                            <h2>Hierarchical Cluster Tree</h2>
+                            <span class="card-sub-hint">O(log N) Top-Down Traversal Topology</span>
+                        </div>
                     </div>
                     <div class="tree-legend">
                         <span class="legend-item"><span class="dot-stable"></span> Stable</span>
                         <span class="legend-item"><span class="dot-transitional"></span> Transitional</span>
-                        <span class="legend-item"><span class="dot-critical"></span> Volatile / Spiked</span>
+                        <span class="legend-item"><span class="dot-critical"></span> High Load</span>
                     </div>
                 </div>
 
-                <!-- Interactive SVG / Visual Tree View -->
+                <!-- Interactive SVG Visual Tree View -->
                 <div class="tree-canvas-container" id="treeCanvasContainer">
-                    <svg id="clusterTreeSvg" viewBox="0 0 900 420" preserveAspectRatio="xMidYMid meet"></svg>
+                    <svg id="clusterTreeSvg" viewBox="0 0 900 400" preserveAspectRatio="xMidYMid meet"></svg>
                 </div>
 
                 <!-- Active Dispatch Route Banner -->
@@ -225,15 +238,20 @@
                 </div>
             </div>
 
-            <!-- Real-time Dispatch Terminal Feed -->
+            <!-- Real-time Dispatch Activity Terminal -->
             <div class="glass-card terminal-card">
                 <div class="card-header">
                     <div class="card-title-group">
-                        <svg class="card-icon text-emerald" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="4 17 10 11 4 5"></polyline>
-                            <line x1="12" y1="19" x2="20" y2="19"></line>
-                        </svg>
-                        <h2>Real-Time Dispatch Activity Feed</h2>
+                        <span class="icon-bubble bubble-emerald">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="4 17 10 11 4 5"></polyline>
+                                <line x1="12" y1="19" x2="20" y2="19"></line>
+                            </svg>
+                        </span>
+                        <div>
+                            <h2>Real-Time Dispatch Activity Feed</h2>
+                            <span class="card-sub-hint">Live WebSocket Telemetry Stream</span>
+                        </div>
                     </div>
                     <span class="live-indicator"><span class="status-dot pulse-emerald"></span> STREAMING</span>
                 </div>
@@ -247,24 +265,29 @@
         <!-- RIGHT COLUMN: Algorithmic Comparison & Node Load Heatmap -->
         <section class="grid-col right-col">
             
-            <!-- Side-by-side Algorithmic Comparison Card -->
+            <!-- Side-by-side Algorithmic Complexity Comparison Card -->
             <div class="glass-card benchmark-card">
                 <div class="card-header">
                     <div class="card-title-group">
-                        <svg class="card-icon text-cyan" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="20" x2="18" y2="10"></line>
-                            <line x1="12" y1="20" x2="12" y2="4"></line>
-                            <line x1="6" y1="20" x2="6" y2="14"></line>
-                        </svg>
-                        <h2>O(log N) vs O(N) Complexity Proof</h2>
+                        <span class="icon-bubble bubble-blue">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                        </span>
+                        <div>
+                            <h2>Complexity Benchmark HUD</h2>
+                            <span class="card-sub-hint">Empirical Decision Latency Proof</span>
+                        </div>
                     </div>
-                    <span class="speedup-badge" id="speedupBadge">3.8x Faster</span>
+                    <span class="speedup-badge" id="speedupBadge">4.2x Faster</span>
                 </div>
 
                 <div class="comparison-grid">
                     <div class="comp-box comp-tree">
                         <div class="comp-header">
-                            <span class="comp-title">Algorithm 2 (P9)</span>
+                            <span class="comp-title">Algorithm 2 (Tree)</span>
                             <span class="comp-complexity font-mono text-cyan">O(log N)</span>
                         </div>
                         <div class="comp-metric-wrap">
@@ -291,8 +314,10 @@
                 <div class="sparkline-wrapper">
                     <div class="sparkline-labels">
                         <span>Recent Latency History (µs)</span>
-                        <span class="font-mono text-cyan">■ Tree</span>
-                        <span class="font-mono text-rose">■ Flat Scan</span>
+                        <div class="sparkline-legend">
+                            <span class="font-mono text-cyan">■ Tree O(log N)</span>
+                            <span class="font-mono text-rose">■ Flat O(N)</span>
+                        </div>
                     </div>
                     <canvas id="latencyCanvas" width="380" height="75"></canvas>
                 </div>
@@ -302,13 +327,18 @@
             <div class="glass-card rack-matrix-card">
                 <div class="card-header">
                     <div class="card-title-group">
-                        <svg class="card-icon text-amber" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
-                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
-                        </svg>
-                        <h2>Compute Node Rack Matrix</h2>
+                        <span class="icon-bubble bubble-amber">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                            </svg>
+                        </span>
+                        <div>
+                            <h2>Compute Node Rack Matrix</h2>
+                            <span class="card-sub-hint">Real-Time Core Load Distribution</span>
+                        </div>
                     </div>
                     <span class="rack-count-pill font-mono" id="rackCountPill">4 Racks / 16 Nodes</span>
                 </div>
