@@ -7,6 +7,72 @@ document.addEventListener("DOMContentLoaded", () => {
     let latencyHistory = { tree: [], lln: [] };
     let dispatchedChunkCount = 0;
     let activePathTimeout = null;
+    let terminalCursorEl = null;
+
+    let hasAnimatedTreeOnce = false;
+
+    // ===== LIGHTWEIGHT AMBIENT PARTICLE CANVAS (60FPS OPTIMIZED) =====
+    (function initParticles() {
+        const canvas = document.getElementById("particleCanvas");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        let W, H, particles = [];
+
+        function resize() {
+            W = canvas.width  = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener("resize", resize);
+
+        const COUNT = 24;
+        for (let i = 0; i < COUNT; i++) {
+            particles.push({
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                r: Math.random() * 2.0 + 0.8,
+                vx: (Math.random() - 0.5) * 0.25,
+                vy: (Math.random() - 0.5) * 0.25,
+                alpha: Math.random() * 0.4 + 0.2,
+                hue: Math.random() > 0.5 ? 190 : 265
+            });
+        }
+
+        function drawFrame() {
+            ctx.clearRect(0, 0, W, H);
+            const isLight = document.documentElement.getAttribute("data-theme") === "light";
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                p.x += p.vx; p.y += p.vy;
+                if (p.x < 0) p.x = W;
+                if (p.x > W) p.x = 0;
+                if (p.y < 0) p.y = H;
+                if (p.y > H) p.y = 0;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = isLight
+                    ? `hsla(${p.hue}, 80%, 45%, ${p.alpha * 0.35})`
+                    : `hsla(${p.hue}, 90%, 65%, ${p.alpha})`;
+                ctx.fill();
+            }
+            requestAnimationFrame(drawFrame);
+        }
+        drawFrame();
+    })();
+
+    // ===== BUTTON RIPPLE =====
+    document.querySelectorAll(".btn").forEach(btn => {
+        btn.addEventListener("click", function(e) {
+            const r = document.createElement("span");
+            r.className = "ripple-effect";
+            const rect = this.getBoundingClientRect();
+            r.style.left = (e.clientX - rect.left) + "px";
+            r.style.top  = (e.clientY - rect.top)  + "px";
+            this.appendChild(r);
+            r.addEventListener("animationend", () => r.remove());
+        });
+    });
+
 
     // Elements
     const videoPlayer = document.getElementById("videoPlayer");
@@ -81,7 +147,20 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- WebSocket Connection ---
+    // --- Initial State Fetch & WebSocket Connection ---
+    async function fetchInitialState() {
+        try {
+            const res = await fetch("/api/cluster/state");
+            if (res.ok) {
+                clusterState = await res.json();
+                renderClusterTelemetry(clusterState);
+            }
+        } catch (e) {
+            // Server may still be booting
+        }
+    }
+
+    let wsRetryDelay = 300;
     function initWebSocket() {
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
         const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -89,6 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
+            wsRetryDelay = 300;
             logTerminal("⚡ Connected to Cluster Telemetry WebSocket", "text-cyan");
         };
 
@@ -112,7 +192,8 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         ws.onclose = () => {
-            setTimeout(initWebSocket, 2000);
+            setTimeout(initWebSocket, wsRetryDelay);
+            wsRetryDelay = Math.min(2000, Math.round(wsRetryDelay * 1.5));
         };
     }
 
@@ -123,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Entropy and Stability State
         const entropyVal = state.entropy.shannon.toFixed(3);
         const normVal = state.entropy.normalized.toFixed(3);
-        entropyValuePill.textContent = `${entropyVal} (norm: ${normVal})`;
+        animateNumberFlash(entropyValuePill, `${entropyVal} (norm: ${normVal})`);
 
         const classification = state.entropy.classification;
         stabilityClassPill.textContent = classification;
@@ -132,14 +213,14 @@ document.addEventListener("DOMContentLoaded", () => {
         // Latency Comparison Cards
         const treeAvg = state.latency_comparison.hierarchical_tree_avg_us || 0.0;
         const llnAvg = state.latency_comparison.flat_scan_lln_avg_us || 0.0;
-        avgTreeLatency.textContent = treeAvg.toFixed(1);
-        avgLlnLatency.textContent = llnAvg.toFixed(1);
+        animateNumberFlash(avgTreeLatency, treeAvg.toFixed(1));
+        animateNumberFlash(avgLlnLatency, llnAvg.toFixed(1));
 
         statAvgDecision.textContent = `${treeAvg.toFixed(1)} µs`;
 
         if (treeAvg > 0 && llnAvg > 0) {
             const ratio = (llnAvg / treeAvg).toFixed(1);
-            speedupBadge.textContent = `${ratio}x Faster`;
+            animateNumberFlash(speedupBadge, `${ratio}x Faster`);
         }
 
         // Render Latency Sparkline Chart
@@ -158,14 +239,28 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderRackMatrix(racks, nodes) {
         if (!racks || !nodes) return;
 
+        // Ensure all 4 racks are displayed even if a single rack is returned
+        const effectiveRacks = (racks && racks.length > 1) ? racks : [
+            { rack_id: 0, avg_cpu: 0, avg_net: 1.0 },
+            { rack_id: 1, avg_cpu: 0, avg_net: 1.0 },
+            { rack_id: 2, avg_cpu: 0, avg_net: 1.0 },
+            { rack_id: 3, avg_cpu: 0, avg_net: 1.0 },
+        ];
+
         let html = "";
-        racks.forEach((rack) => {
-            const rackNodes = nodes.filter(n => n.rack_id === rack.rack_id);
+        effectiveRacks.forEach((rack) => {
+            const rackNodes = nodes.filter(n => {
+                if (racks && racks.length > 1 && n.rack_id !== undefined && n.rack_id !== null) {
+                    return n.rack_id === rack.rack_id;
+                }
+                return Math.floor(n.node_id / 4) === rack.rack_id;
+            });
+            const rackAvgCpu = rack.avg_cpu || (rackNodes.length ? Math.round(rackNodes.reduce((a, b) => a + (b.cpu || 0), 0) / rackNodes.length) : 0);
             html += `
                 <div class="rack-card" id="rackCard_${rack.rack_id}">
                     <div class="rack-header">
-                        <span>Rack ${rack.rack_id} (Avg CPU: ${rack.avg_cpu}%)</span>
-                        <span class="font-mono text-muted">Net: ${rack.avg_net} MB/s</span>
+                        <span>Rack ${rack.rack_id} (Avg CPU: ${rackAvgCpu}%)</span>
+                        <span class="font-mono text-muted">Net: ${rack.avg_net || 1.0} MB/s</span>
                     </div>
                     <div class="rack-nodes-grid">
             `;
@@ -230,13 +325,19 @@ document.addEventListener("DOMContentLoaded", () => {
         // Compute Node positions (4 per rack)
         const nodePositions = [];
         rackPositions.forEach(rack => {
-            const rackNodes = state.nodes.filter(n => n.rack_id === rack.id);
+            const rackNodes = state.nodes.filter(n => {
+                if (state.racks && state.racks.length > 1 && n.rack_id !== undefined && n.rack_id !== null) {
+                    return n.rack_id === rack.id;
+                }
+                return Math.floor(n.node_id / 4) === rack.id;
+            });
+            const count = rackNodes.length || 4;
             const rackSpan = 180;
-            const startX = rack.x - (rackSpan / 2) + 22;
-            const stepX = (rackSpan - 44) / 3;
+            const startX = rack.x - (rackSpan / 2) + 20;
+            const stepX = count > 1 ? (rackSpan - 40) / (count - 1) : 0;
 
             rackNodes.forEach((node, idx) => {
-                const nodeX = startX + (idx * stepX);
+                const nodeX = count > 1 ? startX + (idx * stepX) : rack.x;
                 const nodeY = 320;
                 nodePositions.push({ id: node.node_id, rackId: rack.id, x: nodeX, y: nodeY, data: node });
 
@@ -265,7 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Draw Rack Nodes
         rackPositions.forEach(rack => {
-            const rData = state.racks.find(r => r.rack_id === rack.id) || { avg_cpu: 0 };
+            const rData = (state.racks && state.racks.find(r => r.rack_id === rack.id)) || { avg_cpu: 0 };
             const strokeColor = rData.avg_cpu > 70 ? "var(--rose)" : rData.avg_cpu > 40 ? "var(--amber)" : "var(--violet)";
             nodesHtml += `
                 <g id="svg_node_rack_${rack.id}" class="tree-node-group">
@@ -290,6 +391,19 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         treeSvg.innerHTML = `<g id="treeLinks">${linksHtml}</g><g id="treeNodes">${nodesHtml}</g>`;
+
+        // Animate entrance ONLY once on initial mount to eliminate layout thrashing
+        if (!hasAnimatedTreeOnce) {
+            hasAnimatedTreeOnce = true;
+            const nodeGroups = treeSvg.querySelectorAll(".tree-node-group");
+            nodeGroups.forEach((g, i) => {
+                g.style.opacity = "0";
+                g.style.transition = `opacity 0.25s ${i * 0.02}s ease`;
+                requestAnimationFrame(() => {
+                    g.style.opacity = "1";
+                });
+            });
+        }
     }
 
     // --- Handle Dispatched Chunk Event ---
@@ -375,17 +489,37 @@ document.addEventListener("DOMContentLoaded", () => {
         drawLine(treeSamples, "#00f2fe"); // Cyan for Hierarchical O(log N)
     }
 
-    // --- Terminal Logging ---
+    // --- Terminal Logging (High-Performance Zero-Lag Append) ---
     function logTerminal(text, colorClass = "text-muted") {
+        if (terminalCursorEl && terminalCursorEl.parentNode) {
+            terminalCursorEl.parentNode.removeChild(terminalCursorEl);
+        }
+
         const line = document.createElement("div");
         line.className = `terminal-line ${colorClass}`;
-        line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+        const prefix = `[${new Date().toLocaleTimeString()}] `;
+        line.textContent = prefix + text;
+
+        terminalCursorEl = document.createElement("span");
+        terminalCursorEl.className = "terminal-cursor";
+        line.appendChild(terminalCursorEl);
+
         dispatchTerminal.appendChild(line);
         dispatchTerminal.scrollTop = dispatchTerminal.scrollHeight;
 
-        if (dispatchTerminal.children.length > 100) {
+        if (dispatchTerminal.children.length > 80) {
             dispatchTerminal.removeChild(dispatchTerminal.firstChild);
         }
+    }
+
+    // --- Animated Number Flash ---
+    function animateNumberFlash(el, newVal) {
+        if (!el) return;
+        if (el.textContent === String(newVal)) return;
+        el.textContent = newVal;
+        el.style.animation = "none";
+        void el.offsetWidth; // reflow trigger
+        el.style.animation = "numberFlash 0.7s ease-out";
     }
 
     // --- Toast Notifications ---
@@ -556,6 +690,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // --- Initialize ---
+    fetchInitialState();
     initWebSocket();
     fetchVideosList();
 });

@@ -15,7 +15,7 @@ class PeriodicRebalancer:
         self.rebuild_count: int = 0
         self.in_place_refresh_count: int = 0
 
-    def check_and_rebalance(self, root: ClusterRoot, all_nodes: List[ComputeNode]) -> Tuple[ClusterRoot, bool, dict]:
+    def check_and_rebalance(self, root: ClusterRoot, all_nodes: List[ComputeNode], nodes_per_rack: int = None) -> Tuple[ClusterRoot, bool, dict]:
         """
         Executes periodic rebalancing step.
         Returns: (updated_root, was_rebuilt, stats_dict)
@@ -23,6 +23,12 @@ class PeriodicRebalancer:
         total_nodes = len(all_nodes)
         if total_nodes == 0:
             return root, False, {}
+
+        if nodes_per_rack is None:
+            if root and root.children:
+                nodes_per_rack = max(1, len(all_nodes) // len(root.children))
+            else:
+                nodes_per_rack = 4
 
         shift_count = 0
         previous_classes: Dict[int, EntropyClass] = {}
@@ -46,7 +52,7 @@ class PeriodicRebalancer:
         # Step 2: Check threshold condition
         if shift_ratio > self.tau_shift_threshold:
             # Rebuild tree bottom-up via Algorithm 1
-            root = build_hierarchical_tree(all_nodes, nodes_per_rack=32)
+            root = build_hierarchical_tree(all_nodes, nodes_per_rack=nodes_per_rack)
             self.rebuild_count += 1
             was_rebuilt = True
         else:

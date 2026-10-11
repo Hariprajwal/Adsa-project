@@ -146,28 +146,51 @@ async def stream_video(filename: str, request: Request):
     range_header = request.headers.get("Range")
 
     if range_header:
-        # Parse range header e.g. "bytes=0-1048575"
-        range_match = re.search(r"bytes=(\d+)-(\d*)", range_header)
-        start = int(range_match.group(1)) if range_match else 0
-        end = int(range_match.group(2)) if range_match and range_match.group(2) else file_size - 1
+        # Standard HTTP Range parsing (RFC 7233)
+        start = 0
+        end = file_size - 1
+
+        match = re.match(r"bytes=(\d*)-(\d*)", range_header.strip())
+        if match:
+            s_str, e_str = match.groups()
+            if s_str and e_str:
+                start = int(s_str)
+                end = int(e_str)
+            elif s_str:
+                start = int(s_str)
+                end = file_size - 1
+            elif e_str:
+                # Suffix byte range
+                suffix = int(e_str)
+                start = max(0, file_size - suffix)
+                end = file_size - 1
+
+        # Check for invalid or unsatisfiable ranges (RFC 7233 Section 4.4)
+        if start >= file_size or start < 0 or end < start:
+            return Response(
+                status_code=416,
+                headers={"Content-Range": f"bytes */{file_size}"}
+            )
+
         end = min(end, file_size - 1)
-        chunk_length = end - start + 1
+        chunk_length = max(0, end - start + 1)
         chunk_index = start // (512 * 1024)
 
-        # Dispatch chunk to load balancer (Algorithm 2)
-        event = cluster_mgr.dispatch_chunk(filename, chunk_index=chunk_index, byte_size=chunk_length)
+        if chunk_length > 0:
+            # Dispatch chunk to load balancer (Algorithm 2)
+            event = cluster_mgr.dispatch_chunk(filename, chunk_index=chunk_index, byte_size=chunk_length)
 
-        # Broadcast immediate dispatch event
-        if connected_websockets:
-            for ws in connected_websockets:
-                try:
-                    asyncio.create_task(ws.send_json({"type": "CHUNK_DISPATCHED", "event": event}))
-                except Exception:
-                    pass
+            # Broadcast immediate dispatch event
+            if connected_websockets:
+                for ws in connected_websockets:
+                    try:
+                        asyncio.create_task(ws.send_json({"type": "CHUNK_DISPATCHED", "event": event}))
+                    except Exception:
+                        pass
 
         with open(file_path, "rb") as f:
             f.seek(start)
-            data = f.read(chunk_length)
+            data = f.read(chunk_length) if chunk_length > 0 else b""
 
         headers = {
             "Content-Range": f"bytes {start}-{end}/{file_size}",

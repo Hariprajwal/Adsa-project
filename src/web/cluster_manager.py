@@ -207,7 +207,9 @@ class ClusterManager:
         """
         Forces execution of Algorithm 3 (Periodic Rebalancing).
         """
-        self.root, was_rebuilt, stats = self.rebalancer.check_and_rebalance(self.root, self.nodes)
+        self.root, was_rebuilt, stats = self.rebalancer.check_and_rebalance(
+            self.root, self.nodes, nodes_per_rack=self.nodes_per_rack
+        )
         self.tree_balancer.root = self.root
         return {
             "was_rebuilt": was_rebuilt,
