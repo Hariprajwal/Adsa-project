@@ -16,8 +16,8 @@ This project implements an **Entropy-Guided Hierarchical Load Balancing Framewor
 | Phase | Milestone | Scope | Status |
 | :---: | :--- | :--- | :---: |
 | **Phase 1** | **Core DSA Engine** | Hierarchical Tree, Entropy Module, Algorithm 1, 2, 3, Baselines (RR, LLN, Work Queue) | 🟢 **Completed & Verified** |
-| **Phase 2** | **Dataset & Simulation** | Parallel Workloads Archive parser (`.swf`), Workload Mapper, Discrete-Event Simulator | ⚪ Optional / Academic |
-| **Phase 3** | **Benchmarking & Paper Results** | Automated generation of Tables 1–4, publication figures (Heatmap, Makespan, CDF) | ⚪ Optional / Academic |
+| **Phase 2** | **Dataset & Simulation** | Parallel Workloads Archive parser (`.swf`), Workload Mapper, Discrete-Event Simulator | 🟢 **Completed & Verified** |
+| **Phase 3** | **Benchmarking & Paper Results** | Automated generation of Tables 1–4, publication figures (Heatmap, Makespan, CDF) via Matplotlib | 🟢 **Completed & Verified** |
 | **Phase 4** | **Interactive Web App & Video Player** | FastAPI backend, WebSocket cluster visualizer, working HTML5 chunked video player, upload dropzone, run.bat | 🟢 **Completed & Verified** |
 
 ---
