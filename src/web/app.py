@@ -165,15 +165,20 @@ async def stream_video(filename: str, request: Request):
                 start = max(0, file_size - suffix)
                 end = file_size - 1
 
-        # Check for invalid or unsatisfiable ranges (RFC 7233 Section 4.4)
-        if start >= file_size or start < 0 or end < start:
+        # If start is beyond file_size in simulated streaming, cycle through file
+        if start >= file_size and file_size > 0:
+            eff_start = start % file_size
+            eff_end = min(eff_start + (end - start), file_size - 1)
+        elif start < 0 or end < start:
             return Response(
                 status_code=416,
                 headers={"Content-Range": f"bytes */{file_size}"}
             )
+        else:
+            eff_start = start
+            eff_end = min(end, file_size - 1)
 
-        end = min(end, file_size - 1)
-        chunk_length = max(0, end - start + 1)
+        chunk_length = max(0, eff_end - eff_start + 1)
         chunk_index = start // (512 * 1024)
 
         if chunk_length > 0:
@@ -189,11 +194,11 @@ async def stream_video(filename: str, request: Request):
                         pass
 
         with open(file_path, "rb") as f:
-            f.seek(start)
+            f.seek(eff_start)
             data = f.read(chunk_length) if chunk_length > 0 else b""
 
         headers = {
-            "Content-Range": f"bytes {start}-{end}/{file_size}",
+            "Content-Range": f"bytes {start}-{end if start < file_size else start + len(data) - 1}/{file_size if start < file_size else '*'}",
             "Accept-Ranges": "bytes",
             "Content-Length": str(len(data)),
             "Content-Type": "video/mp4",
@@ -201,8 +206,39 @@ async def stream_video(filename: str, request: Request):
         return Response(content=data, status_code=206, headers=headers, media_type="video/mp4")
     else:
         # Full content
-        cluster_mgr.dispatch_chunk(filename, chunk_index=0, byte_size=file_size)
+        event = cluster_mgr.dispatch_chunk(filename, chunk_index=0, byte_size=file_size)
+        if connected_websockets:
+            for ws in connected_websockets:
+                try:
+                    asyncio.create_task(ws.send_json({"type": "CHUNK_DISPATCHED", "event": event}))
+                except Exception:
+                    pass
         return FileResponse(file_path, media_type="video/mp4")
+
+@app.post("/api/stream/dispatch_chunk")
+async def dispatch_stream_chunk(request: Request):
+    """
+    Live stream chunk dispatcher: Simulates or triggers active chunk dispatch during playback.
+    Executes Algorithm 2, broadcasts to connected WebSockets, and returns the decision event.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    video_name = body.get("video_name", "demo_stream.mp4")
+    chunk_index = int(body.get("chunk_index", 0))
+    byte_size = int(body.get("byte_size", 256 * 1024))
+
+    event = cluster_mgr.dispatch_chunk(video_name, chunk_index=chunk_index, byte_size=byte_size)
+
+    if connected_websockets:
+        for ws in connected_websockets:
+            try:
+                asyncio.create_task(ws.send_json({"type": "CHUNK_DISPATCHED", "event": event}))
+            except Exception:
+                pass
+
+    return {"status": "dispatched", "event": event}
 
 @app.post("/api/action/burst")
 async def trigger_burst(request: Request):

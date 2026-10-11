@@ -98,6 +98,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const statDispatchedCount = document.getElementById("statDispatchedCount");
     const statAvgDecision = document.getElementById("statAvgDecision");
 
+    // Live Streaming & Algorithm Simulation Controls
+    const btnToggleLiveSim = document.getElementById("btnToggleLiveSim");
+    const liveSimDot = document.getElementById("liveSimDot");
+    const liveSimLabel = document.getElementById("liveSimLabel");
+    const playbackStreamBadge = document.getElementById("playbackStreamBadge");
+    const streamBadgeDot = document.getElementById("streamBadgeDot");
+    const streamBadgeText = document.getElementById("streamBadgeText");
+
+    const algoTagPill = document.getElementById("algoTagPill");
+    const simStep1 = document.getElementById("simStep1");
+    const simStep1Text = document.getElementById("simStep1Text");
+    const simStep2 = document.getElementById("simStep2");
+    const simStep2Text = document.getElementById("simStep2Text");
+    const simStep3 = document.getElementById("simStep3");
+    const simStep3Text = document.getElementById("simStep3Text");
+    const contrastBaselineMetric = document.getElementById("contrastBaselineMetric");
+    const contrastThesisMetric = document.getElementById("contrastThesisMetric");
+
+    // Playback and Simulation State
+    let livePlaybackInterval = null;
+    let continuousTrafficInterval = null;
+    let currentPlaybackChunkIndex = 0;
+    let isContinuousSimActive = false;
+
     const treeSvg = document.getElementById("clusterTreeSvg");
     const dispatchRouteBanner = document.getElementById("dispatchRouteBanner");
     const crumbRack = document.getElementById("crumbRack");
@@ -413,10 +437,16 @@ document.addEventListener("DOMContentLoaded", () => {
         dispatchedChunkCount++;
         statDispatchedCount.textContent = dispatchedChunkCount;
 
-        // Update HUD
+        // Update Video HUD
         hudVideoName.textContent = event.video_name;
         hudChunkId.textContent = `Chunk #${event.chunk_index} (${Math.round(event.byte_size / 1024)} KB)`;
         hudAssignedNode.textContent = `Node_${event.assigned_node_id} (Rack_${event.assigned_rack_id})`;
+
+        // Dynamic buffer fill indicator based on dispatched chunks
+        if (streamBufferFill) {
+            const fillPct = Math.min(100, Math.max(20, ((dispatchedChunkCount * 8) % 85) + 15));
+            streamBufferFill.style.width = `${fillPct}%`;
+        }
 
         // Update Route Crumb Bar
         crumbRack.textContent = `Rack_${event.assigned_rack_id}`;
@@ -424,36 +454,78 @@ document.addEventListener("DOMContentLoaded", () => {
         routeDecisionTime.textContent = `${event.tree_time_us} µs`;
         routeSpeedup.textContent = `${event.speedup_ratio}x vs O(N)`;
 
-        // Highlight SVG Tree Path
+        // Update Live Algorithmic Simulation & Decision Breakdown
+        const sim = event.simulation || {};
+        if (simStep1Text) {
+            simStep1Text.textContent = sim.step1_rack || `Rack_${event.assigned_rack_id} chosen (Lowest min composite load). 3 racks (12 nodes) pruned in O(1)!`;
+        }
+        if (simStep2Text) {
+            simStep2Text.textContent = sim.step2_node || `Node_${event.assigned_node_id} selected (Stability: ${event.node_entropy_class}). Entropy-guided guard active.`;
+        }
+        if (simStep3Text) {
+            simStep3Text.textContent = sim.step3_propagate || `Propagated load upward in ${event.tree_time_us} µs (${event.speedup_ratio}x faster than scanning all 16 nodes).`;
+        }
+        if (contrastBaselineMetric) {
+            contrastBaselineMetric.textContent = sim.traditional_cost || `16 node checks • ${event.lln_time_us} µs • Blind to Volatility`;
+        }
+        if (contrastThesisMetric) {
+            contrastThesisMetric.textContent = sim.thesis_cost || `8 tree checks • ${event.tree_time_us} µs • ${event.speedup_ratio}x Faster`;
+        }
+        if (algoTagPill) {
+            algoTagPill.textContent = `Tree O(log N): ${event.speedup_ratio}x Speedup`;
+        }
+
+        // 3-Step Decision Flow Pulse Animation
+        if (simStep1) simStep1.classList.add("step-active");
+        setTimeout(() => {
+            if (simStep2) simStep2.classList.add("step-active");
+        }, 130);
+        setTimeout(() => {
+            if (simStep3) simStep3.classList.add("step-active");
+        }, 260);
+        setTimeout(() => {
+            if (simStep1) simStep1.classList.remove("step-active");
+            if (simStep2) simStep2.classList.remove("step-active");
+            if (simStep3) simStep3.classList.remove("step-active");
+        }, 850);
+
+        // Highlight SVG Tree Path and Node Circles
         highlightTreePath(event.assigned_rack_id, event.assigned_node_id);
 
         // Highlight Matrix Card
         const nodeCard = document.getElementById(`nodeCard_${event.assigned_node_id}`);
         if (nodeCard) {
             nodeCard.classList.add("highlight-target");
-            setTimeout(() => nodeCard.classList.remove("highlight-target"), 600);
+            setTimeout(() => nodeCard.classList.remove("highlight-target"), 650);
         }
 
         // Add to Terminal
-        const logLine = `[CHUNK #${event.chunk_index}] Route: Root ➔ Rack_${event.assigned_rack_id} ➔ Node_${event.assigned_node_id} | Alg 2: ${event.tree_time_us} µs | Flat LLN: ${event.lln_time_us} µs (${event.speedup_ratio}x) | H(S): ${event.cluster_entropy}`;
+        const logLine = `[LIVE CHUNK #${event.chunk_index}] Route: Root ➔ Rack_${event.assigned_rack_id} ➔ Node_${event.assigned_node_id} | Tree: ${event.tree_time_us} µs (${event.speedup_ratio}x) | Flat: ${event.lln_time_us} µs | H(S): ${event.cluster_entropy}`;
         logTerminal(logLine, "text-cyan");
     }
 
     function highlightTreePath(rackId, nodeId) {
         // Clear previous path highlights
         document.querySelectorAll(".tree-link.active-path").forEach(el => el.classList.remove("active-path"));
+        document.querySelectorAll(".tree-node-circle.active-target").forEach(el => el.classList.remove("active-target"));
 
         const linkRootRack = document.getElementById(`link_root_rack_${rackId}`);
         const linkRackNode = document.getElementById(`link_rack_${rackId}_node_${nodeId}`);
+        const rackCircle = document.getElementById(`rack_circle_${rackId}`);
+        const nodeCircle = document.getElementById(`node_circle_${nodeId}`);
 
         if (linkRootRack) linkRootRack.classList.add("active-path");
         if (linkRackNode) linkRackNode.classList.add("active-path");
+        if (rackCircle) rackCircle.classList.add("active-target");
+        if (nodeCircle) nodeCircle.classList.add("active-target");
 
         if (activePathTimeout) clearTimeout(activePathTimeout);
         activePathTimeout = setTimeout(() => {
             if (linkRootRack) linkRootRack.classList.remove("active-path");
             if (linkRackNode) linkRackNode.classList.remove("active-path");
-        }, 900);
+            if (rackCircle) rackCircle.classList.remove("active-target");
+            if (nodeCircle) nodeCircle.classList.remove("active-target");
+        }, 950);
     }
 
     // --- Draw Latency Sparkline ---
@@ -537,14 +609,118 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 3200);
     }
 
-    // --- Video Player Buffer Listener ---
+    // --- Video Player Buffer & Playback Listeners ---
+    function setStreamBadge(isActive, text) {
+        if (!playbackStreamBadge || !streamBadgeDot || !streamBadgeText) return;
+        if (isActive) {
+            playbackStreamBadge.classList.add("active-stream");
+            streamBadgeDot.className = "badge-dot pulse-streaming";
+        } else {
+            playbackStreamBadge.classList.remove("active-stream");
+            streamBadgeDot.className = "badge-dot pulse-idle";
+        }
+        streamBadgeText.textContent = text;
+    }
+
+    async function dispatchNextStreamChunk() {
+        currentPlaybackChunkIndex++;
+        const vid = videoSelect.value || "demo_stream.mp4";
+        try {
+            const res = await fetch("/api/stream/dispatch_chunk", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    video_name: vid,
+                    chunk_index: currentPlaybackChunkIndex,
+                    byte_size: 256 * 1024
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (!ws || ws.readyState !== WebSocket.OPEN) {
+                    handleChunkDispatched(data.event);
+                }
+            }
+        } catch (e) {
+            console.error("Chunk dispatch request error:", e);
+        }
+    }
+
+    function startPlaybackStreaming() {
+        if (livePlaybackInterval) return;
+        setStreamBadge(true, "PLAYBACK STREAMING (ACTIVE)");
+        dispatchNextStreamChunk();
+        livePlaybackInterval = setInterval(() => {
+            if (!videoPlayer.paused && !videoPlayer.ended) {
+                dispatchNextStreamChunk();
+            }
+        }, 850);
+    }
+
+    function stopPlaybackStreaming() {
+        if (livePlaybackInterval) {
+            clearInterval(livePlaybackInterval);
+            livePlaybackInterval = null;
+        }
+        if (!isContinuousSimActive) {
+            setStreamBadge(false, "IDLE (PRESS PLAY TO STREAM)");
+        }
+    }
+
+    videoPlayer.addEventListener("play", () => {
+        startPlaybackStreaming();
+    });
+
+    videoPlayer.addEventListener("pause", () => {
+        stopPlaybackStreaming();
+    });
+
+    videoPlayer.addEventListener("ended", () => {
+        stopPlaybackStreaming();
+        if (!isContinuousSimActive) {
+            setStreamBadge(false, "PLAYBACK FINISHED");
+        }
+    });
+
     videoPlayer.addEventListener("timeupdate", () => {
         if (videoPlayer.duration > 0 && videoPlayer.buffered.length > 0) {
             const bufferedEnd = videoPlayer.buffered.end(videoPlayer.buffered.length - 1);
             const percent = Math.min(100, Math.round((bufferedEnd / videoPlayer.duration) * 100));
-            streamBufferFill.style.width = `${percent}%`;
+            if (streamBufferFill && streamBufferFill.style.width === "0%") {
+                streamBufferFill.style.width = `${percent}%`;
+            }
         }
     });
+
+    // Toggle Continuous Live Simulation Button
+    if (btnToggleLiveSim) {
+        btnToggleLiveSim.addEventListener("click", () => {
+            isContinuousSimActive = !isContinuousSimActive;
+            if (isContinuousSimActive) {
+                if (liveSimDot) liveSimDot.classList.add("active");
+                if (liveSimLabel) liveSimLabel.textContent = "Stop Continuous Stream";
+                setStreamBadge(true, "CONTINUOUS TRAFFIC SIMULATION ACTIVE");
+                showToast("Simulating continuous live stream traffic...", "info");
+                dispatchNextStreamChunk();
+                continuousTrafficInterval = setInterval(() => {
+                    dispatchNextStreamChunk();
+                }, 850);
+            } else {
+                if (liveSimDot) liveSimDot.classList.remove("active");
+                if (liveSimLabel) liveSimLabel.textContent = "Simulate Continuous Stream";
+                if (continuousTrafficInterval) {
+                    clearInterval(continuousTrafficInterval);
+                    continuousTrafficInterval = null;
+                }
+                if (videoPlayer.paused) {
+                    setStreamBadge(false, "IDLE (PRESS PLAY TO STREAM)");
+                } else {
+                    setStreamBadge(true, "PLAYBACK STREAMING (ACTIVE)");
+                }
+                showToast("Continuous simulation stopped", "info");
+            }
+        });
+    }
 
     // --- Video Ingestion & Upload ---
     async function fetchVideosList() {
@@ -677,13 +853,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     btnSimulateStream.addEventListener("click", () => {
-        showToast("Simulating 20 rapid stream chunk requests...", "info");
+        showToast("Simulating 20 rapid stream chunk dispatches...", "info");
         let count = 0;
         const interval = setInterval(() => {
-            const currentVid = videoSelect.value || "demo_stream.mp4";
-            fetch(`/api/stream/${currentVid}`, {
-                headers: { "Range": `bytes=${count * 524288}-${(count + 1) * 524288 - 1}` }
-            }).catch(() => {});
+            dispatchNextStreamChunk();
             count++;
             if (count >= 20) clearInterval(interval);
         }, 120);

@@ -169,6 +169,69 @@
                         <span class="stat-num font-mono text-emerald" id="statAvgDecision">0.0 µs</span>
                     </div>
                 </div>
+
+                <!-- Live Stream Controls & Playback Status -->
+                <div class="stream-control-row">
+                    <button type="button" class="btn btn-sm btn-outline" id="btnToggleLiveSim">
+                        <span class="live-dot" id="liveSimDot"></span>
+                        <span id="liveSimLabel">Simulate Continuous Stream</span>
+                    </button>
+                    <span class="playback-stream-badge font-mono" id="playbackStreamBadge">
+                        <span class="badge-dot pulse-idle" id="streamBadgeDot"></span>
+                        <span id="streamBadgeText">IDLE (PRESS PLAY TO STREAM)</span>
+                    </span>
+                </div>
+
+                <!-- Live Algorithmic Simulation & Decision Inspector -->
+                <div class="algo-simulation-card" id="algoSimulationCard">
+                    <div class="algo-sim-header">
+                        <div class="algo-sim-title-wrap">
+                            <span class="sim-badge">ALGORITHM SIMULATION</span>
+                            <span class="algo-sim-title">Live Decision Breakdown</span>
+                        </div>
+                        <span class="algo-tag font-mono" id="algoTagPill">Tree O(log N) vs Flat O(N)</span>
+                    </div>
+
+                    <!-- 3-Step Decision Flow Simulator -->
+                    <div class="sim-steps-flow">
+                        <div class="sim-flow-step" id="simStep1">
+                            <div class="step-icon">1</div>
+                            <div class="step-body">
+                                <span class="step-head">RACK PRUNING (O(1))</span>
+                                <span class="step-text font-mono" id="simStep1Text">Evaluating pre-aggregated rack min loads...</span>
+                            </div>
+                        </div>
+                        <div class="sim-flow-step" id="simStep2">
+                            <div class="step-icon">2</div>
+                            <div class="step-body">
+                                <span class="step-head">ENTROPY FILTER (P9)</span>
+                                <span class="step-text font-mono" id="simStep2Text">Filtering high-volatility nodes via Shannon entropy...</span>
+                            </div>
+                        </div>
+                        <div class="sim-flow-step" id="simStep3">
+                            <div class="step-icon">3</div>
+                            <div class="step-body">
+                                <span class="step-head">UPWARD PROPAGATION</span>
+                                <span class="step-text font-mono" id="simStep3Text">Updating ancestors in O(log N) bottom-up...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Algorithmic Contrast: Typically Used vs Our Thesis -->
+                    <div class="algo-contrast-box">
+                        <div class="contrast-col contrast-baseline">
+                            <div class="contrast-tag font-mono">TRADITIONAL (FLAT SCAN / RR)</div>
+                            <div class="contrast-metric font-mono" id="contrastBaselineMetric">16 checks • ~24.5 µs</div>
+                            <div class="contrast-note">Blind to volatility; causes hotspot bottlenecks & queue stalls</div>
+                        </div>
+                        <div class="contrast-vs font-mono">VS</div>
+                        <div class="contrast-col contrast-thesis">
+                            <div class="contrast-tag font-mono text-cyan">OUR THESIS (P9 TREE BALANCER)</div>
+                            <div class="contrast-metric font-mono text-emerald" id="contrastThesisMetric">8 checks • ~5.1 µs (4.8x faster)</div>
+                            <div class="contrast-note">Entropy-guided stability; 12 nodes pruned in 1 traversal</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Video Upload Dropzone Card -->

@@ -29,6 +29,16 @@ def test_web_routes():
     assert len(res.content) == 1024
     print("[OK] Partial video stream (206) with chunk dispatch verified")
 
+    # 3b. Test Dedicated Live Dispatch Chunk Endpoint
+    res = client.post("/api/stream/dispatch_chunk", json={"video_name": "demo_stream.mp4", "chunk_index": 1, "byte_size": 256000})
+    assert res.status_code == 200
+    dispatch_data = res.json()
+    assert dispatch_data["status"] == "dispatched"
+    assert "event" in dispatch_data
+    assert "simulation" in dispatch_data["event"]
+    assert "step1_rack" in dispatch_data["event"]["simulation"]
+    print("[OK] Live stream chunk dispatch endpoint with simulation trace verified")
+
     # 4. Test Cluster State
     res = client.get("/api/cluster/state")
     assert res.status_code == 200
