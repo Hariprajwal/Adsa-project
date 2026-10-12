@@ -61,6 +61,42 @@ def test_web_routes():
     assert "was_rebuilt" in res.json()["details"]
     print("[OK] Algorithm 3 dynamic rebalancing triggered successfully")
 
+    # 7. Test Policy Comparison Table in Cluster State
+    res = client.get("/api/cluster/state")
+    assert res.status_code == 200
+    state_data = res.json()
+    assert "policy_comparison_table" in state_data
+    table = state_data["policy_comparison_table"]
+    assert len(table) == 6
+    expected_policies = {"hierarchical", "round_robin", "least_loaded", "work_queue", "random", "work_stealing"}
+    assert {row["key"] for row in table} == expected_policies
+    for row in table:
+        assert "name" in row
+        assert "rule" in row
+        assert "complexity" in row
+        assert "avg_latency_us" in row
+        assert "variance" in row
+        assert "jain_fairness" in row
+        assert "dispatches" in row
+    print("[OK] Policy comparison table across all 6 baselines verified")
+
+    # 8. Test Set Policy Endpoint
+    for pol in ["round_robin", "work_stealing", "hierarchical"]:
+        res = client.post("/api/action/set_policy", json={"policy": pol})
+        assert res.status_code == 200
+        assert res.json()["active_algorithm"] == pol
+    print("[OK] Set policy endpoint successfully switched modes")
+
+    # 9. Test Pure Mode Traffic Simulation
+    res = client.post("/api/action/simulate_traffic", json={"count": 5, "policy": "work_stealing"})
+    assert res.status_code == 200
+    sim_data = res.json()
+    assert sim_data["status"] == "simulation_complete"
+    assert sim_data["count"] == 5
+    assert sim_data["active_policy"] == "work_stealing"
+    assert sim_data["last_event"]["active_policy"] == "work_stealing"
+    print("[OK] Pure mode traffic simulation verified")
+
 if __name__ == "__main__":
     test_web_routes()
     print("\nALL PHASE 4 TESTS PASSED!")

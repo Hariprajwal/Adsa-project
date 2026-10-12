@@ -219,7 +219,7 @@ async def stream_video(filename: str, request: Request):
 async def dispatch_stream_chunk(request: Request):
     """
     Live stream chunk dispatcher: Simulates or triggers active chunk dispatch during playback.
-    Executes Algorithm 2, broadcasts to connected WebSockets, and returns the decision event.
+    Executes specified policy (or active cluster algorithm), broadcasts to WebSockets, and returns event.
     """
     try:
         body = await request.json()
@@ -228,8 +228,9 @@ async def dispatch_stream_chunk(request: Request):
     video_name = body.get("video_name", "demo_stream.mp4")
     chunk_index = int(body.get("chunk_index", 0))
     byte_size = int(body.get("byte_size", 256 * 1024))
+    policy = body.get("policy", None)
 
-    event = cluster_mgr.dispatch_chunk(video_name, chunk_index=chunk_index, byte_size=byte_size)
+    event = cluster_mgr.dispatch_chunk(video_name, chunk_index=chunk_index, byte_size=byte_size, policy=policy)
 
     if connected_websockets:
         for ws in connected_websockets:
@@ -239,6 +240,71 @@ async def dispatch_stream_chunk(request: Request):
                 pass
 
     return {"status": "dispatched", "event": event}
+
+@app.post("/api/action/set_policy")
+async def set_cluster_policy(request: Request):
+    """
+    Switches the cluster-wide active dispatching algorithm / pure policy.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    policy = body.get("policy", "hierarchical")
+    success = cluster_mgr.set_active_algorithm(policy)
+    if not success:
+        raise HTTPException(status_code=400, detail=f"Invalid dispatch policy: {policy}")
+
+    # Broadcast updated cluster telemetry immediately
+    state = cluster_mgr.get_cluster_state()
+    if connected_websockets:
+        for ws in connected_websockets:
+            try:
+                asyncio.create_task(ws.send_json({"type": "TELEMETRY", "data": state}))
+            except Exception:
+                pass
+
+    return {
+        "status": "policy_updated",
+        "active_algorithm": cluster_mgr.active_algorithm,
+        "active_policy_name": cluster_mgr.policies_info.get(cluster_mgr.active_algorithm, {}).get("name")
+    }
+
+@app.post("/api/action/simulate_traffic")
+async def simulate_traffic(request: Request):
+    """
+    Simulates a rapid burst of streaming traffic chunks in a designated pure mode or active policy.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    count = int(body.get("count", 20))
+    policy = body.get("policy", None)
+    video_name = body.get("video_name", "demo_stream.mp4")
+
+    if policy and policy not in cluster_mgr.policies_info:
+        raise HTTPException(status_code=400, detail=f"Invalid dispatch policy: {policy}")
+
+    dispatched_events = []
+    for i in range(count):
+        event = cluster_mgr.dispatch_chunk(video_name, chunk_index=i + 1, policy=policy)
+        dispatched_events.append(event)
+        if connected_websockets:
+            for ws in connected_websockets:
+                try:
+                    asyncio.create_task(ws.send_json({"type": "CHUNK_DISPATCHED", "event": event}))
+                except Exception:
+                    pass
+        await asyncio.sleep(0.015)
+
+    return {
+        "status": "simulation_complete",
+        "count": count,
+        "active_policy": policy or cluster_mgr.active_algorithm,
+        "policy_name": cluster_mgr.policies_info.get(policy or cluster_mgr.active_algorithm, {}).get("name"),
+        "last_event": dispatched_events[-1] if dispatched_events else None
+    }
 
 @app.post("/api/action/burst")
 async def trigger_burst(request: Request):
@@ -281,6 +347,22 @@ async def websocket_endpoint(websocket: WebSocket):
             elif action == "rebalance":
                 res = cluster_mgr.trigger_rebalance()
                 await websocket.send_json({"type": "REBALANCE_RESULT", "data": res})
+            elif action == "set_policy":
+                pol = msg.get("policy", "hierarchical")
+                cluster_mgr.set_active_algorithm(pol)
+                state = cluster_mgr.get_cluster_state()
+                await websocket.send_json({"type": "TELEMETRY", "data": state})
+            elif action == "simulate_traffic":
+                pol = msg.get("policy", None)
+                cnt = int(msg.get("count", 20))
+                for i in range(cnt):
+                    ev = cluster_mgr.dispatch_chunk("demo_stream.mp4", chunk_index=i + 1, policy=pol)
+                    for ws in connected_websockets:
+                        try:
+                            await ws.send_json({"type": "CHUNK_DISPATCHED", "event": ev})
+                        except Exception:
+                            pass
+                    await asyncio.sleep(0.015)
     except WebSocketDisconnect:
         if websocket in connected_websockets:
             connected_websockets.remove(websocket)

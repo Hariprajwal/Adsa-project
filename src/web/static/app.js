@@ -90,6 +90,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnBurst = document.getElementById("btnBurst");
     const btnRebalance = document.getElementById("btnRebalance");
     const btnSimulateStream = document.getElementById("btnSimulateStream");
+    const btnSimulateDropdownToggle = document.getElementById("btnSimulateDropdownToggle");
+    const simulateDropdownMenu = document.getElementById("simulateDropdownMenu");
+    const btnSimulateLabel = document.getElementById("btnSimulateLabel");
+    const activeModeLabel = document.getElementById("activeModeLabel");
+    const policyTableBody = document.getElementById("policyTableBody");
+    let currentActivePolicy = "hierarchical";
 
     const hudVideoName = document.getElementById("hudVideoName");
     const hudChunkId = document.getElementById("hudChunkId");
@@ -293,6 +299,14 @@ document.addEventListener("DOMContentLoaded", () => {
         // Render Interactive SVG Topology Tree
         renderClusterTreeSvg(state);
         updateInspectorHUD(selectedNodeTarget.type, selectedNodeTarget.id, state);
+
+        // Render Real-Time Policy Comparison Table (All 6 Baselines)
+        if (state.policy_comparison_table) {
+            renderPolicyComparisonTable(state.policy_comparison_table, state.active_algorithm);
+        }
+        if (state.active_algorithm && state.active_algorithm !== currentActivePolicy) {
+            syncActivePolicyUI(state.active_algorithm, state.active_policy_name);
+        }
     }
 
     // --- Render Rack Matrix ---
@@ -701,7 +715,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Add to Terminal
-        const logLine = `[LIVE CHUNK #${event.chunk_index}] Route: Root ➔ Rack_${event.assigned_rack_id} ➔ Node_${event.assigned_node_id} | Tree: ${event.tree_time_us} µs (${event.speedup_ratio}x) | Flat: ${event.lln_time_us} µs | H(S): ${event.cluster_entropy}`;
+        const polIcon = event.policy_icon || "⚡";
+        const polName = event.policy_name || "Proposed Tree";
+        const latTime = event.dispatch_latency_us !== undefined ? event.dispatch_latency_us : event.tree_time_us;
+        const logLine = `[${polIcon} ${polName}] Chunk #${event.chunk_index} ➔ Node_${event.assigned_node_id} (Rack_${event.assigned_rack_id}) | Latency: ${latTime} µs | Tree: ${event.tree_time_us} µs (${event.speedup_ratio}x) | Flat: ${event.lln_time_us} µs | H(S): ${event.cluster_entropy}`;
         logTerminal(logLine, "text-cyan");
     }
 
@@ -823,18 +840,20 @@ document.addEventListener("DOMContentLoaded", () => {
         streamBadgeText.textContent = text;
     }
 
-    async function dispatchNextStreamChunk() {
+    async function dispatchNextStreamChunk(overridePolicy = null) {
         currentPlaybackChunkIndex++;
         const vid = videoSelect.value || "demo_stream.mp4";
         try {
+            const payload = {
+                video_name: vid,
+                chunk_index: currentPlaybackChunkIndex,
+                byte_size: 256 * 1024,
+                policy: overridePolicy || currentActivePolicy
+            };
             const res = await fetch("/api/stream/dispatch_chunk", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    video_name: vid,
-                    chunk_index: currentPlaybackChunkIndex,
-                    byte_size: 256 * 1024
-                })
+                body: JSON.stringify(payload)
             });
             if (res.ok) {
                 const data = await res.json();
@@ -1053,15 +1072,231 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // =========================================================================
+    // --- Pure Simulation Policies & Real-Time Comparison Table Logic ---
+    // =========================================================================
+
+    const policyLabels = {
+        "hierarchical": "Simulate Traffic (P9 Tree)",
+        "round_robin": "Simulate Traffic (Round-Robin)",
+        "least_loaded": "Simulate Traffic (Least-Loaded)",
+        "work_queue": "Simulate Traffic (Work Queue)",
+        "random": "Simulate Traffic (Random)",
+        "work_stealing": "Simulate Traffic (Work Stealing)"
+    };
+
+    const policyFullNames = {
+        "hierarchical": "Proposed P9 Tree",
+        "round_robin": "Round-Robin (RR)",
+        "least_loaded": "Least-Loaded Node (LLN)",
+        "work_queue": "Work Queue",
+        "random": "Random",
+        "work_stealing": "Work Stealing"
+    };
+
+    function syncActivePolicyUI(policyKey, customName = null) {
+        currentActivePolicy = policyKey;
+        if (btnSimulateLabel) {
+            btnSimulateLabel.textContent = policyLabels[policyKey] || `Simulate Traffic (${policyKey})`;
+        }
+        if (activeModeLabel) {
+            activeModeLabel.textContent = customName || policyFullNames[policyKey] || policyKey;
+        }
+        document.querySelectorAll(".dropdown-item").forEach(item => {
+            item.classList.toggle("active", item.getAttribute("data-policy") === policyKey);
+        });
+    }
+
+    function renderPolicyComparisonTable(tableData, activeAlg) {
+        if (!tableData || !Array.isArray(tableData)) return;
+
+        tableData.forEach(p => {
+            const row = document.getElementById(`row-${p.key}`);
+            if (!row) return;
+
+            const isRowActive = p.key === activeAlg;
+            row.classList.toggle("row-active", isRowActive);
+
+            // Update active badge in title
+            const titleWrap = row.querySelector(".policy-title-wrap");
+            if (titleWrap) {
+                let activeBadge = titleWrap.querySelector(".badge-active-live");
+                if (isRowActive && !activeBadge) {
+                    activeBadge = document.createElement("span");
+                    activeBadge.className = "badge-active-live";
+                    activeBadge.textContent = "ACTIVE";
+                    titleWrap.appendChild(activeBadge);
+                } else if (!isRowActive && activeBadge) {
+                    activeBadge.remove();
+                }
+            }
+
+            // Avg Decision Latency
+            const latEl = document.getElementById(`lat-${p.key}`);
+            if (latEl) {
+                const formattedLat = Number(p.avg_latency_us).toFixed(1);
+                if (latEl.textContent !== formattedLat) {
+                    latEl.textContent = formattedLat;
+                    latEl.parentElement.classList.add("cell-flash");
+                    setTimeout(() => latEl.parentElement.classList.remove("cell-flash"), 600);
+                }
+            }
+
+            // CPU Variance
+            const varEl = document.getElementById(`var-${p.key}`);
+            if (varEl) {
+                const formattedVar = Number(p.variance).toFixed(1);
+                if (varEl.textContent !== formattedVar) {
+                    varEl.textContent = formattedVar;
+                }
+            }
+
+            // Jain's Fairness & Mini Bar
+            const jainEl = document.getElementById(`jain-${p.key}`);
+            const barEl = document.getElementById(`bar-${p.key}`);
+            if (jainEl) {
+                const jainScore = Number(p.jain_fairness);
+                jainEl.textContent = jainScore.toFixed(3);
+                
+                let colorClass = "fill-emerald";
+                let textClass = "text-emerald";
+                if (jainScore < 0.75) {
+                    colorClass = "fill-rose";
+                    textClass = "text-rose";
+                } else if (jainScore < 0.82) {
+                    colorClass = "fill-amber";
+                    textClass = "text-amber";
+                } else if (jainScore < 0.92) {
+                    colorClass = "fill-cyan";
+                    textClass = "text-cyan";
+                }
+                jainEl.className = `val-fairness ${textClass}`;
+
+                if (barEl) {
+                    barEl.style.width = `${Math.min(100, Math.max(5, jainScore * 100))}%`;
+                    barEl.className = `mini-bar-fill ${colorClass}`;
+                }
+            }
+
+            // Dispatches Counter
+            const dispEl = document.getElementById(`disp-${p.key}`);
+            if (dispEl) {
+                dispEl.textContent = p.dispatches || 0;
+            }
+
+            // Run Pure button state
+            const runBtn = row.querySelector(".btn-pure-run");
+            if (runBtn) {
+                if (isRowActive) {
+                    runBtn.className = "btn btn-xs btn-pure-run btn-accent";
+                    runBtn.textContent = "Active Mode";
+                } else {
+                    runBtn.className = "btn btn-xs btn-pure-run btn-outline";
+                    runBtn.textContent = "Run Pure";
+                }
+            }
+        });
+    }
+
+    async function setActivePolicy(policyKey, shouldSimulateBurst = true) {
+        syncActivePolicyUI(policyKey);
+        try {
+            const res = await fetch("/api/action/set_policy", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ policy: policyKey })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (shouldSimulateBurst) {
+                    simulatePureTraffic(policyKey, 20);
+                } else {
+                    showToast(`Activated ${data.active_policy_name || policyKey} mode`, "info");
+                }
+            }
+        } catch (e) {
+            console.error("Failed to switch policy:", e);
+            if (shouldSimulateBurst) {
+                simulatePureTraffic(policyKey, 20);
+            }
+        }
+    }
+
+    async function simulatePureTraffic(policyKey, count = 20) {
+        const policyName = policyFullNames[policyKey] || policyKey;
+        showToast(`Simulating ${count} chunks in pure ${policyName} mode...`, "info");
+
+        try {
+            const vid = videoSelect.value || "demo_stream.mp4";
+            const res = await fetch("/api/action/simulate_traffic", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ count, policy: policyKey, video_name: vid })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.last_event && (!ws || ws.readyState !== WebSocket.OPEN)) {
+                    handleChunkDispatched(data.last_event);
+                }
+            }
+        } catch (e) {
+            console.warn("REST simulation failed, falling back to client dispatch loop:", e);
+            let c = 0;
+            const interval = setInterval(() => {
+                dispatchNextStreamChunk(policyKey);
+                c++;
+                if (c >= count) clearInterval(interval);
+            }, 100);
+        }
+    }
+
+    // Toggle Dropdown Menu
+    if (btnSimulateDropdownToggle && simulateDropdownMenu) {
+        btnSimulateDropdownToggle.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isOpen = simulateDropdownMenu.classList.contains("show");
+            simulateDropdownMenu.classList.toggle("show", !isOpen);
+            btnSimulateDropdownToggle.setAttribute("aria-expanded", String(!isOpen));
+        });
+
+        // Close dropdown when clicking anywhere outside
+        document.addEventListener("click", (e) => {
+            if (!simulateDropdownMenu.contains(e.target) && e.target !== btnSimulateDropdownToggle) {
+                simulateDropdownMenu.classList.remove("show");
+                btnSimulateDropdownToggle.setAttribute("aria-expanded", "false");
+            }
+        });
+
+        // Dropdown Items click listener
+        document.querySelectorAll(".dropdown-item").forEach(item => {
+            item.addEventListener("click", () => {
+                const pol = item.getAttribute("data-policy");
+                if (pol) {
+                    simulateDropdownMenu.classList.remove("show");
+                    btnSimulateDropdownToggle.setAttribute("aria-expanded", "false");
+                    setActivePolicy(pol, true);
+                }
+            });
+        });
+    }
+
+    // Main Dropdown Action Button (Simulate 20 chunks with current active policy)
     btnSimulateStream.addEventListener("click", () => {
-        showToast("Simulating 20 rapid stream chunk dispatches...", "info");
-        let count = 0;
-        const interval = setInterval(() => {
-            dispatchNextStreamChunk();
-            count++;
-            if (count >= 20) clearInterval(interval);
-        }, 120);
+        simulatePureTraffic(currentActivePolicy, 20);
     });
+
+    // Delegate "Run Pure" buttons inside the Comparison Table
+    if (policyTableBody) {
+        policyTableBody.addEventListener("click", (e) => {
+            const btn = e.target.closest(".btn-pure-run");
+            if (btn) {
+                const pol = btn.getAttribute("data-policy");
+                if (pol) {
+                    setActivePolicy(pol, true);
+                }
+            }
+        });
+    }
 
     // --- Initialize ---
     fetchInitialState();

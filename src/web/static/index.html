@@ -78,12 +78,99 @@
                 </svg>
                 Dynamic Rebalance
             </button>
-            <button id="btnSimulateStream" class="btn btn-accent" title="Simulate 20 rapid stream chunk requests">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-                Simulate Traffic
-            </button>
+            <!-- Simulate Traffic Dropdown Button Group (Pure Mode Selector) -->
+            <div class="dropdown-button-group" id="simulateDropdownGroup">
+                <button id="btnSimulateStream" class="btn btn-accent dropdown-main-btn" title="Simulate 20 rapid stream chunk requests with active policy">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    <span id="btnSimulateLabel">Simulate Traffic (P9 Tree)</span>
+                </button>
+                <button id="btnSimulateDropdownToggle" class="btn btn-accent dropdown-toggle-btn" aria-haspopup="true" aria-expanded="false" title="Select Pure Mode Policy">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="dropdown-menu glass-dropdown" id="simulateDropdownMenu" role="menu">
+                    <div class="dropdown-menu-header">
+                        <span class="dropdown-header-title">PURE SIMULATION POLICIES</span>
+                        <span class="dropdown-header-sub">Click to activate &amp; run 20 chunks</span>
+                    </div>
+                    <button class="dropdown-item active" data-policy="hierarchical" role="menuitem">
+                        <div class="item-icon-title">
+                            <span class="policy-emoji">⚡</span>
+                            <div class="item-text-wrap">
+                                <div class="item-title-row">
+                                    <span class="item-name">Proposed P9 Tree (Thesis)</span>
+                                    <span class="badge-tag tag-proposed">PROPOSED</span>
+                                </div>
+                                <div class="item-desc">Coarse-to-fine rack pruning with entropy volatility guard</div>
+                            </div>
+                        </div>
+                        <span class="item-complexity font-mono text-cyan">O(log N)</span>
+                    </button>
+                    <button class="dropdown-item" data-policy="round_robin" role="menuitem">
+                        <div class="item-icon-title">
+                            <span class="policy-emoji">🔄</span>
+                            <div class="item-text-wrap">
+                                <div class="item-title-row">
+                                    <span class="item-name">Round-Robin (RR)</span>
+                                </div>
+                                <div class="item-desc">Assign jobs cyclically to nodes.</div>
+                            </div>
+                        </div>
+                        <span class="item-complexity font-mono text-emerald">O(1)</span>
+                    </button>
+                    <button class="dropdown-item" data-policy="least_loaded" role="menuitem">
+                        <div class="item-icon-title">
+                            <span class="policy-emoji">⚖️</span>
+                            <div class="item-text-wrap">
+                                <div class="item-title-row">
+                                    <span class="item-name">Least-Loaded Node (LLN)</span>
+                                </div>
+                                <div class="item-desc">Flat list, scan for node with minimum CPU utilization.</div>
+                            </div>
+                        </div>
+                        <span class="item-complexity font-mono text-rose">O(N)</span>
+                    </button>
+                    <button class="dropdown-item" data-policy="work_queue" role="menuitem">
+                        <div class="item-icon-title">
+                            <span class="policy-emoji">📥</span>
+                            <div class="item-text-wrap">
+                                <div class="item-title-row">
+                                    <span class="item-name">Work Queue</span>
+                                </div>
+                                <div class="item-desc">Centralized queue, assign to first available node.</div>
+                            </div>
+                        </div>
+                        <span class="item-complexity font-mono text-amber">O(1)-O(N)</span>
+                    </button>
+                    <button class="dropdown-item" data-policy="random" role="menuitem">
+                        <div class="item-icon-title">
+                            <span class="policy-emoji">🎲</span>
+                            <div class="item-text-wrap">
+                                <div class="item-title-row">
+                                    <span class="item-name">Random</span>
+                                </div>
+                                <div class="item-desc">Assign to random node.</div>
+                            </div>
+                        </div>
+                        <span class="item-complexity font-mono text-cyan">O(1)</span>
+                    </button>
+                    <button class="dropdown-item" data-policy="work_stealing" role="menuitem">
+                        <div class="item-icon-title">
+                            <span class="policy-emoji">🤝</span>
+                            <div class="item-text-wrap">
+                                <div class="item-title-row">
+                                    <span class="item-name">Work Stealing</span>
+                                </div>
+                                <div class="item-desc">Idle nodes steal jobs from busy nodes (if supported).</div>
+                            </div>
+                        </div>
+                        <span class="item-complexity font-mono text-purple">O(k)</span>
+                    </button>
+                </div>
+            </div>
             <button id="themeToggleBtn" class="btn btn-outline theme-toggle-btn" title="Switch Dark / Light Mode" aria-label="Toggle theme">
                 <svg id="sunIcon" class="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                     <circle cx="12" cy="12" r="5"></circle>
@@ -438,6 +525,215 @@
                 </div>
                 <div class="terminal-body font-mono" id="dispatchTerminal">
                     <div class="terminal-line text-muted">// Entropy-Guided Hierarchical Cluster Ready. Waiting for stream chunks...</div>
+                </div>
+            </div>
+
+            <!-- Real-Time Algorithmic Comparison Table Card (Directly Below Real-Time Dispatch) -->
+            <div class="glass-card comparison-table-card" id="policyComparisonCard">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <span class="icon-bubble bubble-purple">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                <line x1="3" y1="9" x2="21" y2="9"></line>
+                                <line x1="3" y1="15" x2="21" y2="15"></line>
+                                <line x1="10" y1="3" x2="10" y2="21"></line>
+                            </svg>
+                        </span>
+                        <div>
+                            <h2>Real-Time Policy Comparison Matrix</h2>
+                            <span class="card-sub-hint">Live Empirical Performance across Proposed P9 &amp; Baselines</span>
+                        </div>
+                    </div>
+                    <div class="table-header-meta">
+                        <span class="active-policy-indicator">Active: <strong id="activeModeLabel" class="text-cyan">Proposed P9 Tree</strong></span>
+                        <span class="live-indicator"><span class="status-dot pulse-emerald"></span> REAL-TIME EVAL</span>
+                    </div>
+                </div>
+
+                <div class="comparison-table-wrapper">
+                    <table class="policy-comparison-table" id="policyComparisonTable">
+                        <thead>
+                            <tr>
+                                <th class="th-policy">Policy / Algorithm</th>
+                                <th class="th-behavior">Behavior &amp; Exact Dispatch Rule</th>
+                                <th class="th-complexity">Complexity</th>
+                                <th class="th-latency">Avg Latency</th>
+                                <th class="th-var">CPU Var (&sigma;²)</th>
+                                <th class="th-fairness">Jain's Fairness</th>
+                                <th class="th-dispatches">Dispatches</th>
+                                <th class="th-actions">Simulate Pure</th>
+                            </tr>
+                        </thead>
+                        <tbody id="policyTableBody">
+                            <tr class="row-policy row-proposed row-active" data-policy="hierarchical" id="row-hierarchical">
+                                <td class="td-name">
+                                    <div class="policy-name-cell">
+                                        <span class="cell-icon">⚡</span>
+                                        <div>
+                                            <div class="policy-title-wrap">
+                                                <strong>Proposed P9 Tree</strong>
+                                                <span class="badge-tag tag-proposed">PROPOSED</span>
+                                                <span class="badge-active-live">ACTIVE</span>
+                                            </div>
+                                            <span class="text-muted sub-txt">Entropy-Guided Traversal</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="td-rule">
+                                    <span class="rule-text">Coarse-to-fine rack pruning with entropy volatility guard.</span>
+                                </td>
+                                <td class="td-complexity font-mono text-cyan">O(log N)</td>
+                                <td class="td-latency font-mono"><span class="val-latency text-cyan" id="lat-hierarchical">2.4</span> µs</td>
+                                <td class="td-var font-mono"><span class="val-var" id="var-hierarchical">4.2</span></td>
+                                <td class="td-fairness">
+                                    <div class="fairness-cell font-mono">
+                                        <span class="val-fairness text-emerald" id="jain-hierarchical">0.965</span>
+                                        <div class="mini-bar-track"><div class="mini-bar-fill fill-emerald" id="bar-hierarchical" style="width: 96.5%;"></div></div>
+                                    </div>
+                                </td>
+                                <td class="td-dispatches font-mono"><span class="val-dispatches" id="disp-hierarchical">0</span></td>
+                                <td class="td-actions">
+                                    <button class="btn btn-xs btn-pure-run btn-accent" data-policy="hierarchical" title="Simulate 20 chunks using Proposed P9 Tree">Run Pure</button>
+                                </td>
+                            </tr>
+                            <tr class="row-policy" data-policy="round_robin" id="row-round_robin">
+                                <td class="td-name">
+                                    <div class="policy-name-cell">
+                                        <span class="cell-icon">🔄</span>
+                                        <div>
+                                            <div class="policy-title-wrap"><strong>Round-Robin (RR)</strong></div>
+                                            <span class="text-muted sub-txt">Cyclic Round-Robin</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="td-rule">
+                                    <span class="rule-text">Assign jobs cyclically to nodes.</span>
+                                </td>
+                                <td class="td-complexity font-mono text-emerald">O(1)</td>
+                                <td class="td-latency font-mono"><span class="val-latency text-emerald" id="lat-round_robin">0.8</span> µs</td>
+                                <td class="td-var font-mono"><span class="val-var" id="var-round_robin">28.4</span></td>
+                                <td class="td-fairness">
+                                    <div class="fairness-cell font-mono">
+                                        <span class="val-fairness text-amber" id="jain-round_robin">0.785</span>
+                                        <div class="mini-bar-track"><div class="mini-bar-fill fill-amber" id="bar-round_robin" style="width: 78.5%;"></div></div>
+                                    </div>
+                                </td>
+                                <td class="td-dispatches font-mono"><span class="val-dispatches" id="disp-round_robin">0</span></td>
+                                <td class="td-actions">
+                                    <button class="btn btn-xs btn-pure-run btn-outline" data-policy="round_robin" title="Simulate 20 chunks using Round-Robin">Run Pure</button>
+                                </td>
+                            </tr>
+                            <tr class="row-policy" data-policy="least_loaded" id="row-least_loaded">
+                                <td class="td-name">
+                                    <div class="policy-name-cell">
+                                        <span class="cell-icon">⚖️</span>
+                                        <div>
+                                            <div class="policy-title-wrap"><strong>Least-Loaded Node (LLN)</strong></div>
+                                            <span class="text-muted sub-txt">Linear Exhaustive Scan</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="td-rule">
+                                    <span class="rule-text">Flat list, scan for node with minimum CPU utilization.</span>
+                                </td>
+                                <td class="td-complexity font-mono text-rose">O(N)</td>
+                                <td class="td-latency font-mono"><span class="val-latency text-rose" id="lat-least_loaded">10.8</span> µs</td>
+                                <td class="td-var font-mono"><span class="val-var" id="var-least_loaded">5.8</span></td>
+                                <td class="td-fairness">
+                                    <div class="fairness-cell font-mono">
+                                        <span class="val-fairness text-cyan" id="jain-least_loaded">0.950</span>
+                                        <div class="mini-bar-track"><div class="mini-bar-fill fill-cyan" id="bar-least_loaded" style="width: 95.0%;"></div></div>
+                                    </div>
+                                </td>
+                                <td class="td-dispatches font-mono"><span class="val-dispatches" id="disp-least_loaded">0</span></td>
+                                <td class="td-actions">
+                                    <button class="btn btn-xs btn-pure-run btn-outline" data-policy="least_loaded" title="Simulate 20 chunks using Least-Loaded Node">Run Pure</button>
+                                </td>
+                            </tr>
+                            <tr class="row-policy" data-policy="work_queue" id="row-work_queue">
+                                <td class="td-name">
+                                    <div class="policy-name-cell">
+                                        <span class="cell-icon">📥</span>
+                                        <div>
+                                            <div class="policy-title-wrap"><strong>Work Queue</strong></div>
+                                            <span class="text-muted sub-txt">Centralized Queue Dispatch</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="td-rule">
+                                    <span class="rule-text">Centralized queue, assign to first available node.</span>
+                                </td>
+                                <td class="td-complexity font-mono text-amber">O(1)-O(N)</td>
+                                <td class="td-latency font-mono"><span class="val-latency text-amber" id="lat-work_queue">1.6</span> µs</td>
+                                <td class="td-var font-mono"><span class="val-var" id="var-work_queue">15.2</span></td>
+                                <td class="td-fairness">
+                                    <div class="fairness-cell font-mono">
+                                        <span class="val-fairness text-cyan" id="jain-work_queue">0.870</span>
+                                        <div class="mini-bar-track"><div class="mini-bar-fill fill-cyan" id="bar-work_queue" style="width: 87.0%;"></div></div>
+                                    </div>
+                                </td>
+                                <td class="td-dispatches font-mono"><span class="val-dispatches" id="disp-work_queue">0</span></td>
+                                <td class="td-actions">
+                                    <button class="btn btn-xs btn-pure-run btn-outline" data-policy="work_queue" title="Simulate 20 chunks using Work Queue">Run Pure</button>
+                                </td>
+                            </tr>
+                            <tr class="row-policy" data-policy="random" id="row-random">
+                                <td class="td-name">
+                                    <div class="policy-name-cell">
+                                        <span class="cell-icon">🎲</span>
+                                        <div>
+                                            <div class="policy-title-wrap"><strong>Random</strong></div>
+                                            <span class="text-muted sub-txt">Uniform Random Pick</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="td-rule">
+                                    <span class="rule-text">Assign to random node.</span>
+                                </td>
+                                <td class="td-complexity font-mono text-cyan">O(1)</td>
+                                <td class="td-latency font-mono"><span class="val-latency text-cyan" id="lat-random">0.9</span> µs</td>
+                                <td class="td-var font-mono"><span class="val-var" id="var-random">36.8</span></td>
+                                <td class="td-fairness">
+                                    <div class="fairness-cell font-mono">
+                                        <span class="val-fairness text-rose" id="jain-random">0.705</span>
+                                        <div class="mini-bar-track"><div class="mini-bar-fill fill-rose" id="bar-random" style="width: 70.5%;"></div></div>
+                                    </div>
+                                </td>
+                                <td class="td-dispatches font-mono"><span class="val-dispatches" id="disp-random">0</span></td>
+                                <td class="td-actions">
+                                    <button class="btn btn-xs btn-pure-run btn-outline" data-policy="random" title="Simulate 20 chunks using Random Allocation">Run Pure</button>
+                                </td>
+                            </tr>
+                            <tr class="row-policy" data-policy="work_stealing" id="row-work_stealing">
+                                <td class="td-name">
+                                    <div class="policy-name-cell">
+                                        <span class="cell-icon">🤝</span>
+                                        <div>
+                                            <div class="policy-title-wrap"><strong>Work Stealing</strong></div>
+                                            <span class="text-muted sub-txt">Probing k Random Peers</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="td-rule">
+                                    <span class="rule-text">Idle nodes steal jobs from busy nodes (if supported).</span>
+                                </td>
+                                <td class="td-complexity font-mono text-purple">O(k)</td>
+                                <td class="td-latency font-mono"><span class="val-latency text-purple" id="lat-work_stealing">2.1</span> µs</td>
+                                <td class="td-var font-mono"><span class="val-var" id="var-work_stealing">9.4</span></td>
+                                <td class="td-fairness">
+                                    <div class="fairness-cell font-mono">
+                                        <span class="val-fairness text-emerald" id="jain-work_stealing">0.920</span>
+                                        <div class="mini-bar-track"><div class="mini-bar-fill fill-emerald" id="bar-work_stealing" style="width: 92.0%;"></div></div>
+                                    </div>
+                                </td>
+                                <td class="td-dispatches font-mono"><span class="val-dispatches" id="disp-work_stealing">0</span></td>
+                                <td class="td-actions">
+                                    <button class="btn btn-xs btn-pure-run btn-outline" data-policy="work_stealing" title="Simulate 20 chunks using Work Stealing">Run Pure</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 

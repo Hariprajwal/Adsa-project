@@ -3,7 +3,7 @@ TITLE Entropy-Guided Cluster Video Streamer (ADSA P9)
 COLOR 0B
 
 echo ======================================================================
-echo    ENTROPY-GUIDED HIERARCHICAL LOAD BALANCER & VIDEO STREAMER
+echo    ENTROPY-GUIDED HIERARCHICAL LOAD BALANCER AND VIDEO STREAMER
 echo                    ADSA Project Engine (P9)
 echo ======================================================================
 echo.
