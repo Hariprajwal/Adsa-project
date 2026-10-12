@@ -15,7 +15,7 @@ from src.core.tree import ComputeNode, build_hierarchical_tree, ClusterRoot
 from src.core.entropy import EntropyClass
 from src.core.balancer import EntropyHierarchicalBalancer, Job, JobType
 from src.core.baselines import (
-    RoundRobinBalancer, LeastLoadedNodeBalancer, WorkQueueBalancer, RandomBalancer
+    RoundRobinBalancer, LeastLoadedNodeBalancer, WorkQueueBalancer, RandomBalancer, WorkStealingBalancer
 )
 from src.core.rebalance import PeriodicRebalancer
 
@@ -103,6 +103,9 @@ class DiscreteEventSimulator:
             rebalancer = None
         elif policy == "random":
             scheduler = RandomBalancer(nodes=nodes)
+            rebalancer = None
+        elif policy == "work_stealing":
+            scheduler = WorkStealingBalancer(nodes=nodes, num_probes=3, overload_threshold=50.0)
             rebalancer = None
         else:
             raise ValueError(f"Unknown policy: {policy}")

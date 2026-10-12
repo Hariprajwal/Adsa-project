@@ -107,3 +107,45 @@ class RandomBalancer:
         elapsed_ms = (time.perf_counter() - start) * 1000.0
         self.total_dispatches += 1
         return node, elapsed_ms
+
+
+class WorkStealingBalancer:
+    """
+    Baseline 5: Work Stealing Balancer (P9 Section 4.6)
+    Nodes maintain local task queues. Incoming jobs are distributed to an initial target node.
+    If the target node is overloaded (load > overload_threshold), or underloaded nodes have spare
+    capacity, randomized work stealing probes k peer nodes (e.g., k=3). If a probed peer is
+    less loaded than the victim, work is stolen/transferred to balance load across nodes.
+    Complexity: O(k) randomized peer probing time per dispatch.
+    """
+    def __init__(self, nodes: List[ComputeNode], num_probes: int = 3, overload_threshold: float = 50.0):
+        self.nodes = nodes
+        self.num_probes = num_probes
+        self.overload_threshold = overload_threshold
+        self.current_idx = 0
+        self.total_dispatches = 0
+        self.total_steals = 0
+
+    def query_and_assign(self, job: Job) -> Tuple[ComputeNode, float]:
+        start = time.perf_counter()
+        weights = WEIGHT_PROFILES.get(job.job_type, WEIGHT_PROFILES[JobType.BALANCED])
+        
+        # Initial assigned node (cyclic primary allocation)
+        primary_node = self.nodes[self.current_idx]
+        self.current_idx = (self.current_idx + 1) % len(self.nodes)
+        
+        primary_score = primary_node.get_composite_load(weights)
+        target_node = primary_node
+
+        # If primary node is overloaded, probe k random peers to steal/offload work
+        if primary_score > self.overload_threshold and len(self.nodes) > 1:
+            candidates = random.sample(self.nodes, min(self.num_probes, len(self.nodes)))
+            best_peer = min(candidates, key=lambda n: n.get_composite_load(weights))
+            if best_peer.get_composite_load(weights) < primary_score:
+                target_node = best_peer
+                self.total_steals += 1
+
+        target_node.assign_job(job.job_id, job.cpu_req, job.mem_req, job.net_req, job.disk_req)
+        elapsed_ms = (time.perf_counter() - start) * 1000.0
+        self.total_dispatches += 1
+        return target_node, elapsed_ms

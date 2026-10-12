@@ -5,7 +5,10 @@ Core Data Structures & Algorithms Engine for Entropy-Guided Hierarchical Load Ba
 from .entropy import EntropyTracker, EntropyClass
 from .tree import ComputeNode, RackNode, ClusterRoot, ResourceVector, build_hierarchical_tree
 from .balancer import EntropyHierarchicalBalancer, Job, JobType, WEIGHT_PROFILES
-from .baselines import RoundRobinBalancer, LeastLoadedNodeBalancer, WorkQueueBalancer, RandomBalancer
+from .baselines import (
+    RoundRobinBalancer, LeastLoadedNodeBalancer, WorkQueueBalancer, RandomBalancer, WorkStealingBalancer
+)
+from .predictor import LightweightPredictor, LoadTrend
 from .rebalance import PeriodicRebalancer
 
 __all__ = [
@@ -24,5 +27,8 @@ __all__ = [
     "LeastLoadedNodeBalancer",
     "WorkQueueBalancer",
     "RandomBalancer",
+    "WorkStealingBalancer",
+    "LightweightPredictor",
+    "LoadTrend",
     "PeriodicRebalancer"
 ]

@@ -4,7 +4,10 @@ import random
 from src.core.entropy import EntropyTracker, EntropyClass
 from src.core.tree import ComputeNode, build_hierarchical_tree, ResourceVector
 from src.core.balancer import EntropyHierarchicalBalancer, Job, JobType
-from src.core.baselines import RoundRobinBalancer, LeastLoadedNodeBalancer, WorkQueueBalancer
+from src.core.baselines import (
+    RoundRobinBalancer, LeastLoadedNodeBalancer, WorkQueueBalancer, WorkStealingBalancer
+)
+from src.core.predictor import LightweightPredictor, LoadTrend
 from src.core.rebalance import PeriodicRebalancer
 
 class TestPhase1CoreDSA(unittest.TestCase):
@@ -172,6 +175,44 @@ class TestPhase1CoreDSA(unittest.TestCase):
 
         # LLN time should grow with N, while tree stays fast
         self.assertGreater(results[1024]["lln_ms"], results[128]["lln_ms"])
+
+    def test_work_stealing_balancer(self):
+        """Test Baseline 5: WorkStealingBalancer load offloading and steal logic."""
+        num_nodes = 8
+        nodes = [ComputeNode(node_id=i, rack_id=0) for i in range(num_nodes)]
+        # Make node 0 heavily overloaded
+        nodes[0].load.cpu = 85.0
+        
+        ws_balancer = WorkStealingBalancer(nodes=nodes, num_probes=3, overload_threshold=50.0)
+        job = Job(job_id="ws_job_1", job_type=JobType.CPU_BOUND, cpu_req=10.0)
+        
+        # When primary node (node 0) is overloaded, work stealing should steal job to an idle peer
+        assigned_node, elapsed_ms = ws_balancer.query_and_assign(job)
+        self.assertNotEqual(assigned_node.node_id, 0)
+        self.assertGreater(ws_balancer.total_steals, 0)
+        self.assertEqual(ws_balancer.total_dispatches, 1)
+
+    def test_lightweight_predictor(self):
+        """Test Section 3.4 LightweightPredictor linear trend forecasting."""
+        predictor = LightweightPredictor(horizon_steps=5, slope_threshold=0.5)
+        
+        # Upward surging trend: 20, 25, 30, ..., 65
+        upward_history = [20.0 + 5.0 * i for i in range(10)]
+        pred_val, slope, trend = predictor.predict_future_load(upward_history)
+        self.assertEqual(trend, LoadTrend.UPWARD)
+        self.assertGreater(slope, 0.5)
+        self.assertGreater(pred_val, upward_history[-1])
+
+        # Downward cooling trend: 80, 75, 70, ..., 35
+        downward_history = [80.0 - 5.0 * i for i in range(10)]
+        pred_val, slope, trend = predictor.predict_future_load(downward_history)
+        self.assertEqual(trend, LoadTrend.DOWNWARD)
+        self.assertLess(slope, -0.5)
+        self.assertLess(pred_val, downward_history[-1])
+
+        # Proactive score blending
+        proactive_score = predictor.proactive_composite_load(current_load=50.0, predicted_load=80.0, alpha=0.30)
+        self.assertAlmostEqual(proactive_score, 0.70 * 50.0 + 0.30 * 80.0, places=2)
 
 if __name__ == "__main__":
     unittest.main()

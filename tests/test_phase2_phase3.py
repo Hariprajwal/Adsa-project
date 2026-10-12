@@ -76,6 +76,10 @@ class TestPhase2Phase3(unittest.TestCase):
         self.assertIsInstance(res_rr, SimulationResult)
         self.assertGreater(res_rr.makespan_seconds, 0)
 
+        res_ws = sim.run(jobs, policy="work_stealing")
+        self.assertIsInstance(res_ws, SimulationResult)
+        self.assertGreater(res_ws.makespan_seconds, 0)
+
     def test_matplotlib_figures_exist(self):
         """Test that all 5 Matplotlib publication figures are generated and non-empty."""
         figs = generate_all_figures(self.benchmark_json, self.output_dir)
