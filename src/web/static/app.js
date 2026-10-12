@@ -137,6 +137,41 @@ document.addEventListener("DOMContentLoaded", () => {
     const racksContainer = document.getElementById("racksContainer");
     const toastContainer = document.getElementById("toastContainer");
 
+    // Progressive Disclosure Tree Controls & Inspector Elements
+    const viewModeTabs = document.getElementById("viewModeTabs");
+    const inspectorLevelBadge = document.getElementById("inspectorLevelBadge");
+    const inspectorNodeName = document.getElementById("inspectorNodeName");
+    const inspectorParentRef = document.getElementById("inspectorParentRef");
+    const inspectorChildrenRef = document.getElementById("inspectorChildrenRef");
+    const inspectorMinLoad = document.getElementById("inspectorMinLoad");
+    const inspectorMaxLoad = document.getElementById("inspectorMaxLoad");
+    const inspectorBoundsRange = document.getElementById("inspectorBoundsRange");
+    const inspectorHVar = document.getElementById("inspectorHVar");
+    const inspectorHShannon = document.getElementById("inspectorHShannon");
+    const inspectorEntropyBadge = document.getElementById("inspectorEntropyBadge");
+    const inspectorCpuVal = document.getElementById("inspectorCpuVal");
+    const inspectorCpuBar = document.getElementById("inspectorCpuBar");
+    const inspectorMemVal = document.getElementById("inspectorMemVal");
+    const inspectorMemBar = document.getElementById("inspectorMemBar");
+    const inspectorNetVal = document.getElementById("inspectorNetVal");
+    const inspectorNetBar = document.getElementById("inspectorNetBar");
+    const inspectorDiskVal = document.getElementById("inspectorDiskVal");
+    const inspectorDiskBar = document.getElementById("inspectorDiskBar");
+
+    let currentTreeMode = "topology";
+    let selectedNodeTarget = { type: "root", id: "root" };
+
+    if (viewModeTabs) {
+        viewModeTabs.querySelectorAll(".mode-tab").forEach(tab => {
+            tab.addEventListener("click", () => {
+                viewModeTabs.querySelectorAll(".mode-tab").forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+                currentTreeMode = tab.dataset.mode || "topology";
+                if (clusterState) renderClusterTreeSvg(clusterState);
+            });
+        });
+    }
+
     // --- Theme Management (Dark & Light Mode) ---
     const themeToggleBtn = document.getElementById("themeToggleBtn");
     const sunIcon = document.getElementById("sunIcon");
@@ -257,6 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Render Interactive SVG Topology Tree
         renderClusterTreeSvg(state);
+        updateInspectorHUD(selectedNodeTarget.type, selectedNodeTarget.id, state);
     }
 
     // --- Render Rack Matrix ---
@@ -320,33 +356,157 @@ document.addEventListener("DOMContentLoaded", () => {
         racksContainer.innerHTML = html;
     }
 
-    // --- Render SVG Hierarchical Tree (ClusterRoot -> 4 Racks -> 16 Nodes) ---
-    function renderClusterTreeSvg(state) {
-        const width = 900;
-        const height = 400;
+    // --- Progressive Disclosure Inspector & SVG Hierarchical Tree ---
+    function updateInspectorHUD(type, id, state) {
+        if (!state) return;
 
-        // Tree Coordinates
-        const rootPos = { x: 450, y: 40 };
+        if (type === "root" || id === "root") {
+            if (inspectorLevelBadge) inspectorLevelBadge.textContent = "LEVEL 0 • CLUSTER ROOT";
+            if (inspectorNodeName) inspectorNodeName.textContent = "ClusterRoot";
+            if (inspectorParentRef) inspectorParentRef.innerHTML = 'Parent: <span class="text-muted">None (Partition Root)</span>';
+            
+            const childChips = [0, 1, 2, 3].map(rid => 
+                `<span class="chip-child" onclick="window.__selectTreeNode('rack', ${rid})">R${rid}</span>`
+            ).join(" ");
+            if (inspectorChildrenRef) inspectorChildrenRef.innerHTML = `Children: ${childChips}`;
+
+            const minL = state.root.min_load !== undefined ? state.root.min_load : (state.root.min_cpu || 0);
+            const maxL = state.root.max_cpu !== undefined ? state.root.max_cpu : (state.root.avg_cpu || 0);
+            if (inspectorMinLoad) inspectorMinLoad.textContent = `${minL}%`;
+            if (inspectorMaxLoad) inspectorMaxLoad.textContent = `${maxL}%`;
+            if (inspectorBoundsRange) {
+                inspectorBoundsRange.style.left = `${Math.min(85, minL)}%`;
+                inspectorBoundsRange.style.width = `${Math.max(8, Math.min(100 - minL, maxL - minL))}%`;
+            }
+
+            const avgVar = state.nodes ? (state.nodes.reduce((a, b) => a + (b.variance || 0), 0) / state.nodes.length).toFixed(2) : "0.0";
+            if (inspectorHVar) inspectorHVar.textContent = avgVar;
+            if (inspectorHShannon) inspectorHShannon.textContent = `${(state.entropy.shannon || 0).toFixed(3)} bits`;
+            if (inspectorEntropyBadge) {
+                const cls = state.entropy.classification || "LOW";
+                inspectorEntropyBadge.textContent = `${cls} REGIME (ENTROPY)`;
+                inspectorEntropyBadge.className = `entropy-status-pill status-badge ${cls === 'HIGH' ? 'badge-volatile' : cls === 'MEDIUM' ? 'badge-transitional' : 'badge-stable'}`;
+            }
+
+            setMetricBars(
+                state.root.avg_cpu || 0,
+                state.root.avg_mem || 0,
+                state.root.avg_net || 2.4,
+                state.root.avg_disk || 1.8
+            );
+        } else if (type === "rack") {
+            const rackId = parseInt(id, 10);
+            const rack = (state.racks && state.racks.find(r => r.rack_id === rackId)) || {
+                rack_id: rackId, avg_cpu: 0, avg_mem: 0, avg_net: 1.0, avg_disk: 1.0, min_load: 0, max_cpu: 0
+            };
+            if (inspectorLevelBadge) inspectorLevelBadge.textContent = "LEVEL 1 • RACK AGGREGATOR";
+            if (inspectorNodeName) inspectorNodeName.textContent = `Rack_${rackId}`;
+            if (inspectorParentRef) inspectorParentRef.innerHTML = 'Parent: <span class="chip-child" onclick="window.__selectTreeNode(\'root\', \'root\')">ClusterRoot</span>';
+
+            const rackNodes = (state.nodes || []).filter(n => (n.rack_id !== undefined ? n.rack_id === rackId : Math.floor(n.node_id / 4) === rackId));
+            const childChips = rackNodes.map(n => 
+                `<span class="chip-child" onclick="window.__selectTreeNode('node', ${n.node_id})">N${n.node_id}</span>`
+            ).join(" ") || `<span class="chip-child" onclick="window.__selectTreeNode('node', ${rackId * 4})">N${rackId * 4}</span>`;
+            if (inspectorChildrenRef) inspectorChildrenRef.innerHTML = `Children: ${childChips}`;
+
+            const minL = rack.min_load !== undefined ? rack.min_load : (rack.min_cpu || 0);
+            const maxL = rack.max_cpu !== undefined ? rack.max_cpu : (rack.avg_cpu || 0);
+            if (inspectorMinLoad) inspectorMinLoad.textContent = `${minL}%`;
+            if (inspectorMaxLoad) inspectorMaxLoad.textContent = `${maxL}%`;
+            if (inspectorBoundsRange) {
+                inspectorBoundsRange.style.left = `${Math.min(85, minL)}%`;
+                inspectorBoundsRange.style.width = `${Math.max(8, Math.min(100 - minL, maxL - minL))}%`;
+            }
+
+            const rackVar = rackNodes.length ? (rackNodes.reduce((a, b) => a + (b.variance || 0), 0) / rackNodes.length).toFixed(2) : "0.0";
+            if (inspectorHVar) inspectorHVar.textContent = rackVar;
+            if (inspectorHShannon) inspectorHShannon.textContent = `${((state.entropy.shannon || 0) * 0.9).toFixed(3)} bits`;
+            if (inspectorEntropyBadge) {
+                const eCls = parseFloat(rackVar) > 50 ? "HIGH" : parseFloat(rackVar) > 15 ? "MEDIUM" : "LOW";
+                inspectorEntropyBadge.textContent = `${eCls} REGIME (ENTROPY)`;
+                inspectorEntropyBadge.className = `entropy-status-pill status-badge ${eCls === 'HIGH' ? 'badge-volatile' : eCls === 'MEDIUM' ? 'badge-transitional' : 'badge-stable'}`;
+            }
+
+            setMetricBars(
+                rack.avg_cpu || 0,
+                rack.avg_mem || 0,
+                rack.avg_net || 1.0,
+                rack.avg_disk || 1.0
+            );
+        } else if (type === "node") {
+            const nodeId = parseInt(id, 10);
+            const node = (state.nodes && state.nodes.find(n => n.node_id === nodeId)) || {
+                node_id: nodeId, rack_id: Math.floor(nodeId / 4), cpu: 0, mem: 0, net: 0, disk: 0, variance: 0, entropy_class: "LOW", composite_load: 0
+            };
+            if (inspectorLevelBadge) inspectorLevelBadge.textContent = "LEVEL 2 • COMPUTE NODE (LEAF)";
+            if (inspectorNodeName) inspectorNodeName.textContent = `ComputeNode_${nodeId}`;
+            if (inspectorParentRef) inspectorParentRef.innerHTML = `Parent: <span class="chip-child" onclick="window.__selectTreeNode('rack', ${node.rack_id})">Rack_${node.rack_id}</span>`;
+            if (inspectorChildrenRef) inspectorChildrenRef.innerHTML = 'Children: <span class="text-muted">None (Physical Leaf)</span>';
+
+            const compL = node.composite_load !== undefined ? node.composite_load : node.cpu;
+            if (inspectorMinLoad) inspectorMinLoad.textContent = `${compL}% (Score)`;
+            if (inspectorMaxLoad) inspectorMaxLoad.textContent = `${node.cpu}% (CPU)`;
+            if (inspectorBoundsRange) {
+                inspectorBoundsRange.style.left = `${Math.min(85, compL)}%`;
+                inspectorBoundsRange.style.width = `15%`;
+            }
+
+            if (inspectorHVar) inspectorHVar.textContent = node.variance;
+            if (inspectorHShannon) inspectorHShannon.textContent = `${(node.shannon || 0.42).toFixed(3)} bits`;
+            if (inspectorEntropyBadge) {
+                inspectorEntropyBadge.textContent = `${node.entropy_class} STABILITY`;
+                inspectorEntropyBadge.className = `entropy-status-pill status-badge ${node.entropy_class === 'HIGH' ? 'badge-volatile' : node.entropy_class === 'MEDIUM' ? 'badge-transitional' : 'badge-stable'}`;
+            }
+
+            setMetricBars(node.cpu || 0, node.mem || 0, node.net || 0, node.disk || 0);
+        }
+    }
+
+    function setMetricBars(cpu, mem, net, disk) {
+        if (inspectorCpuVal) inspectorCpuVal.textContent = `${Math.round(cpu)}%`;
+        if (inspectorCpuBar) inspectorCpuBar.style.width = `${Math.min(100, Math.round(cpu))}%`;
+
+        if (inspectorMemVal) inspectorMemVal.textContent = `${Math.round(mem)}%`;
+        if (inspectorMemBar) inspectorMemBar.style.width = `${Math.min(100, Math.round(mem))}%`;
+
+        if (inspectorNetVal) inspectorNetVal.textContent = `${(net || 0).toFixed(1)} MB/s`;
+        if (inspectorNetBar) inspectorNetBar.style.width = `${Math.min(100, Math.round((net / 30) * 100))}%`;
+
+        if (inspectorDiskVal) inspectorDiskVal.textContent = `${(disk || 0).toFixed(1)} MB/s`;
+        if (inspectorDiskBar) inspectorDiskBar.style.width = `${Math.min(100, Math.round((disk / 20) * 100))}%`;
+    }
+
+    window.__selectTreeNode = function(type, id) {
+        selectedNodeTarget = { type, id };
+        if (clusterState) {
+            renderClusterTreeSvg(clusterState);
+            updateInspectorHUD(type, id, clusterState);
+        }
+    };
+
+    // --- Render SVG Hierarchical Tree with Progressive Disclosure ---
+    function renderClusterTreeSvg(state) {
+        const rootPos = { x: 450, y: 45 };
         const rackPositions = [
-            { id: 0, x: 130, y: 150 },
-            { id: 1, x: 340, y: 150 },
-            { id: 2, x: 560, y: 150 },
-            { id: 3, x: 770, y: 150 }
+            { id: 0, x: 130, y: 160 },
+            { id: 1, x: 340, y: 160 },
+            { id: 2, x: 560, y: 160 },
+            { id: 3, x: 770, y: 160 }
         ];
 
         let linksHtml = "";
         let nodesHtml = "";
 
-        // Links from Root to Racks
+        // Links from Root to Racks (Pointers to Children Level 0 -> Level 1)
         rackPositions.forEach(rack => {
             linksHtml += `
                 <line id="link_root_rack_${rack.id}" class="tree-link" 
-                      x1="${rootPos.x}" y1="${rootPos.y + 15}" 
-                      x2="${rack.x}" y2="${rack.y - 15}" />
+                      x1="${rootPos.x}" y1="${rootPos.y + 18}" 
+                      x2="${rack.x}" y2="${rack.y - 18}" />
             `;
         });
 
-        // Compute Node positions (4 per rack)
+        // Compute Node positions (Pointers to Children Level 1 -> Level 2)
         const nodePositions = [];
         rackPositions.forEach(rack => {
             const rackNodes = state.nodes.filter(n => {
@@ -362,61 +522,102 @@ document.addEventListener("DOMContentLoaded", () => {
 
             rackNodes.forEach((node, idx) => {
                 const nodeX = count > 1 ? startX + (idx * stepX) : rack.x;
-                const nodeY = 320;
+                const nodeY = 325;
                 nodePositions.push({ id: node.node_id, rackId: rack.id, x: nodeX, y: nodeY, data: node });
 
                 linksHtml += `
                     <line id="link_rack_${rack.id}_node_${node.node_id}" class="tree-link" 
-                          x1="${rack.x}" y1="${rack.y + 15}" 
+                          x1="${rack.x}" y1="${rack.y + 18}" 
                           x2="${nodeX}" y2="${nodeY - 14}" />
                 `;
             });
         });
 
-        // Theme-aware SVG styling
         const isLight = document.documentElement.getAttribute("data-theme") === "light";
         const nodeFill = isLight ? "#ffffff" : "#1e293b";
         const leafFill = isLight ? "#f8fafc" : "#0f172a";
 
-        // Draw Root Node
+        // Draw Root Node (Level 0)
+        const isRootSelected = selectedNodeTarget.type === "root" ? "node-selected" : "";
         const rootCpu = state.root.avg_cpu || 0;
+        const rootMin = state.root.min_load !== undefined ? state.root.min_load : (state.root.min_cpu || 0);
+        const rootMax = state.root.max_cpu !== undefined ? state.root.max_cpu : (state.root.avg_cpu || 0);
+
+        let rootSubLabel = `Avg ${rootCpu}%`;
+        if (currentTreeMode === "bounds") {
+            rootSubLabel = `Min ${rootMin}% • Max ${rootMax}%`;
+        } else if (currentTreeMode === "multires") {
+            rootSubLabel = `C:${rootCpu}% M:${state.root.avg_mem || 0}%`;
+        } else if (currentTreeMode === "entropy") {
+            rootSubLabel = `${state.entropy.classification} REGIME`;
+        }
+
         nodesHtml += `
-            <g id="svg_node_root" class="tree-node-group">
+            <g id="svg_node_root" class="tree-node-group ${isRootSelected}" onclick="window.__selectTreeNode('root', 'root')">
                 <circle cx="${rootPos.x}" cy="${rootPos.y}" r="22" fill="${nodeFill}" stroke="var(--blue)" stroke-width="2.5" class="tree-node-circle" />
                 <text x="${rootPos.x}" y="${rootPos.y + 4}" class="tree-node-text">ROOT</text>
-                <text x="${rootPos.x}" y="${rootPos.y + 36}" class="tree-node-subtext">Avg ${rootCpu}%</text>
+                <text x="${rootPos.x}" y="${rootPos.y + 36}" class="tree-node-subtext" fill="${currentTreeMode === 'bounds' ? 'var(--cyan)' : 'var(--text-secondary)'}">${rootSubLabel}</text>
             </g>
         `;
 
-        // Draw Rack Nodes
+        // Draw Rack Nodes (Level 1)
         rackPositions.forEach(rack => {
-            const rData = (state.racks && state.racks.find(r => r.rack_id === rack.id)) || { avg_cpu: 0 };
-            const strokeColor = rData.avg_cpu > 70 ? "var(--rose)" : rData.avg_cpu > 40 ? "var(--amber)" : "var(--violet)";
+            const isRackSelected = (selectedNodeTarget.type === "rack" && selectedNodeTarget.id == rack.id) ? "node-selected" : "";
+            const rData = (state.racks && state.racks.find(r => r.rack_id === rack.id)) || { avg_cpu: 0, min_load: 0, max_cpu: 0 };
+            const rMin = rData.min_load !== undefined ? rData.min_load : 0;
+            const rMax = rData.max_cpu !== undefined ? rData.max_cpu : rData.avg_cpu;
+
+            let rackStroke = rData.avg_cpu > 70 ? "var(--rose)" : rData.avg_cpu > 40 ? "var(--amber)" : "var(--violet)";
+            let rackSubLabel = `${rData.avg_cpu}%`;
+
+            if (currentTreeMode === "bounds") {
+                rackSubLabel = `[${rMin}% ➔ ${rMax}%]`;
+            } else if (currentTreeMode === "multires") {
+                rackSubLabel = `C:${rData.avg_cpu}% M:${rData.avg_mem || 0}%`;
+            } else if (currentTreeMode === "entropy") {
+                const rNodes = state.nodes.filter(n => n.rack_id === rack.id);
+                const rAvgVar = rNodes.length ? rNodes.reduce((a,b)=>a+b.variance,0)/rNodes.length : 0;
+                rackStroke = rAvgVar > 50 ? "var(--rose)" : rAvgVar > 15 ? "var(--amber)" : "var(--emerald)";
+                rackSubLabel = rAvgVar > 50 ? "VOLATILE" : rAvgVar > 15 ? "TRANS" : "STABLE";
+            }
+
             nodesHtml += `
-                <g id="svg_node_rack_${rack.id}" class="tree-node-group">
-                    <circle cx="${rack.x}" cy="${rack.y}" r="17" fill="${nodeFill}" stroke="${strokeColor}" stroke-width="2" class="tree-node-circle" />
+                <g id="svg_node_rack_${rack.id}" class="tree-node-group ${isRackSelected}" onclick="window.__selectTreeNode('rack', ${rack.id})">
+                    <circle cx="${rack.x}" cy="${rack.y}" r="17" fill="${nodeFill}" stroke="${rackStroke}" stroke-width="2" class="tree-node-circle" />
                     <text x="${rack.x}" y="${rack.y + 4}" class="tree-node-text">R${rack.id}</text>
-                    <text x="${rack.x}" y="${rack.y + 28}" class="tree-node-subtext">${rData.avg_cpu}%</text>
+                    <text x="${rack.x}" y="${rack.y + 28}" class="tree-node-subtext" fill="${currentTreeMode === 'bounds' ? 'var(--cyan)' : 'var(--text-secondary)'}">${rackSubLabel}</text>
                 </g>
             `;
         });
 
-        // Draw Compute Nodes (Leaves)
+        // Draw Compute Nodes (Level 2 - Leaves)
         nodePositions.forEach(node => {
+            const isNodeSelected = (selectedNodeTarget.type === "node" && selectedNodeTarget.id == node.id) ? "node-selected" : "";
             const cpu = node.data.cpu || 0;
-            const fillColor = cpu > 75 ? "var(--rose)" : cpu > 45 ? "var(--amber)" : "var(--emerald)";
+            let nodeStroke = cpu > 75 ? "var(--rose)" : cpu > 45 ? "var(--amber)" : "var(--emerald)";
+            let nodeSubLabel = `${Math.round(cpu)}%`;
+
+            if (currentTreeMode === "bounds") {
+                nodeSubLabel = `L:${Math.round(node.data.composite_load || cpu)}%`;
+            } else if (currentTreeMode === "multires") {
+                nodeSubLabel = `${Math.round(cpu)}|${Math.round(node.data.mem || 0)}`;
+            } else if (currentTreeMode === "entropy") {
+                const eCls = node.data.entropy_class || "LOW";
+                nodeStroke = eCls === "HIGH" ? "var(--rose)" : eCls === "MEDIUM" ? "var(--amber)" : "var(--emerald)";
+                nodeSubLabel = eCls.substring(0, 3);
+            }
+
             nodesHtml += `
-                <g id="svg_node_compute_${node.id}" class="tree-node-group">
-                    <circle id="node_circle_${node.id}" cx="${node.x}" cy="${node.y}" r="12" fill="${leafFill}" stroke="${fillColor}" stroke-width="2" class="tree-node-circle" />
+                <g id="svg_node_compute_${node.id}" class="tree-node-group ${isNodeSelected}" onclick="window.__selectTreeNode('node', ${node.id})">
+                    <circle id="node_circle_${node.id}" cx="${node.x}" cy="${node.y}" r="12" fill="${leafFill}" stroke="${nodeStroke}" stroke-width="2" class="tree-node-circle" />
                     <text x="${node.x}" y="${node.y + 3}" class="tree-node-text" style="font-size: 8px;">N${node.id}</text>
-                    <text x="${node.x}" y="${node.y + 22}" class="tree-node-subtext" style="font-size: 8px;">${Math.round(cpu)}%</text>
+                    <text x="${node.x}" y="${node.y + 22}" class="tree-node-subtext" style="font-size: 7.5px;">${nodeSubLabel}</text>
                 </g>
             `;
         });
 
         treeSvg.innerHTML = `<g id="treeLinks">${linksHtml}</g><g id="treeNodes">${nodesHtml}</g>`;
 
-        // Animate entrance ONLY once on initial mount to eliminate layout thrashing
         if (!hasAnimatedTreeOnce) {
             hasAnimatedTreeOnce = true;
             const nodeGroups = treeSvg.querySelectorAll(".tree-node-group");

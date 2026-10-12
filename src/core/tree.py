@@ -105,7 +105,9 @@ class ComputeNode:
             self.load.disk = max(0.0, self.load.disk - reqs["disk"])
             self.entropy_tracker.add_sample(self.load.cpu)
 
-    def get_composite_load(self, weights: dict) -> float:
+    def get_composite_load(self, weights: Optional[dict] = None) -> float:
+        if weights is None:
+            weights = {"w_cpu": 0.40, "w_mem": 0.30, "w_net": 0.15, "w_disk": 0.15}
         return self.load.composite_score(
             weights.get("w_cpu", 0.25),
             weights.get("w_mem", 0.25),
@@ -130,6 +132,14 @@ class RackNode:
         self.low_entropy_count: int = 0
         self.high_entropy_count: int = 0
         self.min_composite_cache: Dict[str, float] = {}
+
+    @property
+    def min_load(self) -> float:
+        return self.min_cpu
+
+    @property
+    def max_load(self) -> float:
+        return self.max_cpu
 
     def add_child(self, node: ComputeNode):
         node.parent = self
@@ -186,6 +196,22 @@ class ClusterRoot:
         self.children: List[RackNode] = []
         self.aggregated_load = ResourceVector()
         self.node_lookup: Dict[int, ComputeNode] = {}
+
+    @property
+    def min_cpu(self) -> float:
+        return min((r.min_cpu for r in self.children), default=0.0)
+
+    @property
+    def max_cpu(self) -> float:
+        return max((r.max_cpu for r in self.children), default=0.0)
+
+    @property
+    def min_load(self) -> float:
+        return self.min_cpu
+
+    @property
+    def max_load(self) -> float:
+        return self.max_cpu
 
     def add_rack(self, rack: RackNode):
         rack.parent = self

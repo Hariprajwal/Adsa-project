@@ -307,9 +307,98 @@
                     </div>
                 </div>
 
+                <!-- Tree View Modes: Progressive Disclosure Switcher -->
+                <div class="tree-controls-row">
+                    <div class="view-mode-tabs" id="viewModeTabs">
+                        <button class="mode-tab active" data-mode="topology" title="Minimal, high-contrast tree view">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/><path d="M12 8v4M6 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/></svg>
+                            Clean Topology
+                        </button>
+                        <button class="mode-tab" data-mode="bounds" title="Display Subtree Min/Max composite load bounds for pruning">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
+                            Subtree Min/Max
+                        </button>
+                        <button class="mode-tab" data-mode="multires" title="Display 4D Resource Badges (CPU, Memory, Network, Disk)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                            4D Resource Badges
+                        </button>
+                        <button class="mode-tab" data-mode="entropy" title="Highlight stability regimes (Stable, Transitional, Volatile)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            Entropy Volatility
+                        </button>
+                    </div>
+                    <div class="tree-hint-pill">
+                        <span class="hint-icon">💡</span> Click any node to inspect internal storage fields
+                    </div>
+                </div>
+
                 <!-- Interactive SVG Visual Tree View -->
                 <div class="tree-canvas-container" id="treeCanvasContainer">
                     <svg id="clusterTreeSvg" viewBox="0 0 900 400" preserveAspectRatio="xMidYMid meet"></svg>
+                </div>
+
+                <!-- Interactive Node Telemetry Inspector HUD (P9 Section 4.3 Node Storage Fields) -->
+                <div class="node-inspector-hud" id="nodeInspectorHud">
+                    <div class="inspector-header">
+                        <div class="inspector-title-group">
+                            <span class="inspector-badge" id="inspectorLevelBadge">LEVEL 0 • CLUSTER ROOT</span>
+                            <span class="inspector-node-name font-mono" id="inspectorNodeName">ClusterRoot</span>
+                        </div>
+                        <div class="inspector-meta-row font-mono">
+                            <span class="inspector-meta-item" id="inspectorParentRef">Parent: <span class="text-muted">None (Root)</span></span>
+                            <span class="inspector-meta-item" id="inspectorChildrenRef">Children: <span class="chip-child" data-target="rack_0">R0</span> <span class="chip-child" data-target="rack_1">R1</span> <span class="chip-child" data-target="rack_2">R2</span> <span class="chip-child" data-target="rack_3">R3</span></span>
+                        </div>
+                    </div>
+
+                    <div class="inspector-grid">
+                        <!-- Subtree Min/Max Bound (Algorithm 2 Pruning) -->
+                        <div class="inspector-box bounds-box">
+                            <div class="box-lbl">Subtree Min/Max Composite Bounds</div>
+                            <div class="bounds-pill-wrap font-mono">
+                                <span class="pill-bound min-pill">Min: <strong id="inspectorMinLoad">2.0%</strong></span>
+                                <span class="bound-divider">➔</span>
+                                <span class="pill-bound max-pill">Max: <strong id="inspectorMaxLoad">8.5%</strong></span>
+                            </div>
+                            <div class="bounds-range-track">
+                                <div class="bounds-range-fill" id="inspectorBoundsRange" style="left: 10%; width: 35%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Entropy Engine Telemetry (Algorithm 3 Volatility) -->
+                        <div class="inspector-box entropy-box">
+                            <div class="box-lbl">Entropy Engine Volatility</div>
+                            <div class="entropy-metrics-row font-mono">
+                                <span>H_var: <strong id="inspectorHVar">1.2</strong></span>
+                                <span>H_Shannon: <strong id="inspectorHShannon">0.42b</strong></span>
+                            </div>
+                            <div class="entropy-status-pill status-badge badge-stable" id="inspectorEntropyBadge">
+                                STABLE / LOW JITTER
+                            </div>
+                        </div>
+
+                        <!-- 4-Dimensional Resource Vector (CPU, Memory, Network, Disk) -->
+                        <div class="inspector-box resources-box">
+                            <div class="box-lbl">4D Resource Utilization (Mean Vector)</div>
+                            <div class="res-bar-grid">
+                                <div class="res-item">
+                                    <div class="res-head font-mono"><span>CPU</span><span id="inspectorCpuVal">5.2%</span></div>
+                                    <div class="res-track"><div class="res-fill fill-cpu" id="inspectorCpuBar" style="width: 5%;"></div></div>
+                                </div>
+                                <div class="res-item">
+                                    <div class="res-head font-mono"><span>MEM</span><span id="inspectorMemVal">11.4%</span></div>
+                                    <div class="res-track"><div class="res-fill fill-mem" id="inspectorMemBar" style="width: 11%;"></div></div>
+                                </div>
+                                <div class="res-item">
+                                    <div class="res-head font-mono"><span>NET</span><span id="inspectorNetVal">3.8 MB/s</span></div>
+                                    <div class="res-track"><div class="res-fill fill-net" id="inspectorNetBar" style="width: 15%;"></div></div>
+                                </div>
+                                <div class="res-item">
+                                    <div class="res-head font-mono"><span>DISK</span><span id="inspectorDiskVal">2.0 MB/s</span></div>
+                                    <div class="res-track"><div class="res-fill fill-disk" id="inspectorDiskBar" style="width: 8%;"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Active Dispatch Route Banner -->

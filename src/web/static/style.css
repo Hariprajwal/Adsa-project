@@ -1574,3 +1574,324 @@ body {
     color: #334155;
     border-color: rgba(0, 0, 0, 0.1);
 }
+
+/* ==========================================================================
+   PROGRESSIVE DISCLOSURE TREE CONTROLS & NODE TELEMETRY INSPECTOR HUD
+   ========================================================================== */
+
+.tree-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 14px 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.view-mode-tabs {
+    display: inline-flex;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    gap: 3px;
+}
+
+.mode-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mode-tab.active {
+    color: var(--cyan);
+    background: rgba(0, 242, 254, 0.12);
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);
+}
+
+.tree-hint-pill {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Interactive SVG Node Circles Hover & Selected */
+.tree-node-group {
+    cursor: pointer;
+}
+
+.tree-node-group:hover .tree-node-circle {
+    filter: drop-shadow(0 0 8px var(--cyan));
+    transform: scale(1.08);
+}
+
+.tree-node-group.node-selected .tree-node-circle {
+    stroke: var(--cyan) !important;
+    stroke-width: 3.5px !important;
+    filter: drop-shadow(0 0 12px var(--cyan)) !important;
+    animation: selectedPulse 2s infinite ease-in-out;
+}
+
+@keyframes selectedPulse {
+    0%, 100% { filter: drop-shadow(0 0 8px var(--cyan)); }
+    50% { filter: drop-shadow(0 0 18px var(--cyan)); }
+}
+
+/* Node Telemetry Inspector HUD */
+.node-inspector-hud {
+    margin-top: 10px;
+    background: rgba(7, 11, 20, 0.88);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 242, 254, 0.25);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    transition: border-color 0.3s ease;
+}
+
+.inspector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.inspector-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.inspector-badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    background: rgba(14, 165, 233, 0.18);
+    color: var(--cyan);
+    border: 1px solid rgba(14, 165, 233, 0.35);
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+}
+
+.inspector-node-name {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.inspector-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.70rem;
+}
+
+.inspector-meta-item {
+    color: var(--text-secondary);
+}
+
+.chip-child {
+    display: inline-block;
+    padding: 1px 6px;
+    background: rgba(139, 92, 246, 0.2);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    color: #c4b5fd;
+    border-radius: 3px;
+    font-size: 0.64rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.chip-child:hover {
+    background: var(--violet);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.inspector-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1.4fr;
+    gap: 12px;
+}
+
+.inspector-box {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.box-lbl {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+}
+
+.bounds-pill-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.74rem;
+    margin-top: 2px;
+}
+
+.pill-bound {
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.pill-bound.min-pill {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--emerald);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.pill-bound.max-pill {
+    background: rgba(244, 63, 94, 0.15);
+    color: var(--rose);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.bound-divider {
+    color: var(--text-muted);
+    font-size: 0.70rem;
+}
+
+.bounds-range-track {
+    width: 100%;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.bounds-range-fill {
+    position: absolute;
+    height: 100%;
+    background: linear-gradient(90deg, var(--emerald), var(--rose));
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.entropy-metrics-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+.entropy-status-pill {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    text-align: center;
+    border-radius: 4px;
+    margin-top: 2px;
+}
+
+.res-bar-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 10px;
+}
+
+.res-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.res-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+}
+
+.res-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.res-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.fill-cpu  { background: var(--cyan); }
+.fill-mem  { background: var(--violet); }
+.fill-net  { background: var(--blue); }
+.fill-disk { background: var(--amber); }
+
+/* Light Mode Overrides for Progressive Controls */
+[data-theme="light"] .view-mode-tabs {
+    background: #f1f5f9;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .mode-tab {
+    color: #64748b;
+}
+
+[data-theme="light"] .mode-tab:hover {
+    color: #0f172a;
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .mode-tab.active {
+    color: #0284c7;
+    background: #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .node-inspector-hud {
+    background: rgba(255, 255, 255, 0.94);
+    border-color: rgba(2, 132, 199, 0.25);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .inspector-header {
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .inspector-box {
+    background: #f8fafc;
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .bounds-range-track,
+[data-theme="light"] .res-track {
+    background: rgba(0, 0, 0, 0.08);
+}
+

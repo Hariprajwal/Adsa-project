@@ -272,11 +272,17 @@ class ClusterManager:
                 "avg_mem": round(rack.aggregated_load.mem, 1),
                 "avg_net": round(rack.aggregated_load.net, 1),
                 "avg_disk": round(rack.aggregated_load.disk, 1),
+                "min_cpu": round(rack.min_cpu, 1),
+                "max_cpu": round(rack.max_cpu, 1),
+                "min_load": round(rack.min_load, 1),
+                "parent_id": "ROOT",
+                "children_ids": [c.node_id for c in rack.children]
             })
 
         nodes_data = []
         for n in self.nodes:
             variance = round(n.entropy_tracker.compute_variance_entropy(), 2)
+            shannon_val = round(n.entropy_tracker.compute_shannon_entropy(), 3)
             nodes_data.append({
                 "node_id": n.node_id,
                 "rack_id": n.rack_id,
@@ -284,9 +290,13 @@ class ClusterManager:
                 "mem": round(n.load.mem, 1),
                 "net": round(n.load.net, 1),
                 "disk": round(n.load.disk, 1),
+                "composite_load": round(n.get_composite_load(), 1),
                 "variance": variance,
+                "shannon": shannon_val,
                 "entropy_class": n.entropy_class.value,
                 "active_jobs_count": len(n.active_jobs),
+                "parent_id": f"R{n.rack_id}",
+                "children_ids": [],
                 "recent_history": list(n.entropy_tracker.history)[-8:] if n.entropy_tracker.history else []
             })
 
@@ -295,8 +305,14 @@ class ClusterManager:
                 "avg_cpu": round(self.root.aggregated_load.cpu, 1),
                 "avg_mem": round(self.root.aggregated_load.mem, 1),
                 "avg_net": round(self.root.aggregated_load.net, 1),
+                "avg_disk": round(self.root.aggregated_load.disk, 1),
+                "min_cpu": round(self.root.min_cpu, 1),
+                "max_cpu": round(self.root.max_cpu, 1),
+                "min_load": round(self.root.min_load, 1),
                 "total_nodes": self.num_nodes,
                 "total_racks": len(self.root.children),
+                "parent_id": None,
+                "children_ids": [r.rack_id for r in self.root.children]
             },
             "entropy": {
                 "shannon": round(shannon, 3),
