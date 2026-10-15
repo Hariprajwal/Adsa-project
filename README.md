@@ -22,21 +22,22 @@ This repository contains the complete implementation and empirical evaluation fr
 
 ```text
 ADSA Proj/
-├── P9.docx                     # Original project proposal document
-├── P9.md                       # Full Markdown specification (Math, Algorithms, References)
-├── PROJECT_IMPLEMENTATION.md   # Detailed implementation plan and tracking
+├── docs/                       # Technical reports, paper manuscripts, and PDF generators
+│   ├── pdf/                    # Official compiled PDFs (Research Paper, Final Report, Dossier, etc.)
+│   ├── scripts/                # Automated ReportLab PDF compilation scripts
+│   ├── P9.docx                 # Original course project proposal document
+│   ├── P9.md                   # Full Markdown specification (Math, Algorithms, References)
+│   ├── PROJECT_IMPLEMENTATION.md # Detailed implementation plan and tracking
+│   └── README.md               # Complete documentation catalog & reproduction guide
 ├── src/
-│   ├── core/                   # Layer 1: Core DSA Engine
-│   │   ├── entropy.py          # Variance & Shannon entropy calculations
-│   │   ├── tree.py             # Hierarchical tree & multi-dimensional metrics
-│   │   ├── balancer.py         # Algorithm 2 (O(log N) Min-load query)
-│   │   ├── baselines.py        # Round-Robin, LLN (O(N)), Work Queue, Random
-│   │   └── rebalance.py        # Algorithm 3 (Periodic dynamic rebalancer)
-│   ├── simulation/             # Layer 2: Trace replay & simulator (In progress)
-│   ├── benchmark/              # Layer 3: Paper tables & figure generator (In progress)
-│   └── web/                    # Layer 4: Live video player & visualizer (In progress)
-└── tests/
-    └── test_phase1.py          # Micro-benchmarks & verification test suite
+│   ├── core/                   # Layer 1: Core DSA Engine (Hierarchical Tree, Balancer, Entropy)
+│   ├── simulation/             # Layer 2: Trace replay & discrete-event cluster simulator
+│   ├── benchmark/              # Layer 3: Paper tables & figure generator
+│   └── web/                    # Layer 4: Live video player & interactive topology dashboard
+├── tests/                      # Automated test suite (Phases 1-4, 100% pass rate)
+├── data/                       # SWF traces, benchmark JSONs, and generated figure assets
+├── run.bat                     # Windows 1-click launcher for the web dashboard
+└── requirements.txt            # Python dependencies
 ```
 
 ---
@@ -89,6 +90,13 @@ All 7 unit and integration tests verify:
 
 ---
 
-## 📜 Documentation & Reference
-- See [`P9.md`](./P9.md) for full mathematical definitions, 15 IEEE references (2024–2026), and journal paper reporting criteria.
-- See [`PROJECT_IMPLEMENTATION.md`](./PROJECT_IMPLEMENTATION.md) for phase-wise progress tracking.
+## 📜 Documentation & Technical Reports
+All documentation, paper manuscripts, and compilation pipelines are organized inside [`docs/`](./docs/README.md):
+- **Full Documentation Index:** [`docs/README.md`](./docs/README.md)
+- **Mathematical Specification & Foundations:** [`docs/P9.md`](./docs/P9.md)
+- **Phase-wise Progress Tracking:** [`docs/PROJECT_IMPLEMENTATION.md`](./docs/PROJECT_IMPLEMENTATION.md)
+- **Springer CCIS / LNCS Publication Manuscript:** [`docs/pdf/SPRINGER_CONFERENCE_PROCEEDINGS_REPORT.pdf`](./docs/pdf/SPRINGER_CONFERENCE_PROCEEDINGS_REPORT.pdf)
+- **Comprehensive Faculty Audit Dossier:** [`docs/pdf/FACULTY_COMPREHENSIVE_AUDIT_DOSSIER.pdf`](./docs/pdf/FACULTY_COMPREHENSIVE_AUDIT_DOSSIER.pdf)
+- **Final Project Report:** [`docs/pdf/FINAL_PROJECT_REPORT.pdf`](./docs/pdf/FINAL_PROJECT_REPORT.pdf)
+- **Oral Defense & Presentation Guide:** [`docs/pdf/FACULTY_PRESENTATION_AND_JUSTIFICATION_GUIDE.pdf`](./docs/pdf/FACULTY_PRESENTATION_AND_JUSTIFICATION_GUIDE.pdf)
+- **PDF Compilation Scripts:** [`docs/scripts/`](./docs/scripts/)

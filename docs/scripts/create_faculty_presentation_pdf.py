@@ -56,8 +56,13 @@ class NumberedCanvas(canvas.Canvas):
         self.drawRightString(page_w - 36, 20, page_str)
         self.restoreState()
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DOCS_PDF_DIR = os.path.join(BASE_DIR, "docs", "pdf")
+FIG_DIR = os.path.join(BASE_DIR, "data", "figures")
+
 def build_pdf(filename="FACULTY_PRESENTATION_AND_JUSTIFICATION_GUIDE.pdf"):
-    pdf_path = os.path.join(r"d:\downloads\ADSA Proj", filename)
+    os.makedirs(DOCS_PDF_DIR, exist_ok=True)
+    pdf_path = os.path.join(DOCS_PDF_DIR, filename)
     doc = SimpleDocTemplate(
         pdf_path,
         pagesize=A4,
@@ -577,8 +582,8 @@ def build_pdf(filename="FACULTY_PRESENTATION_AND_JUSTIFICATION_GUIDE.pdf"):
     story.append(Spacer(1, 6))
     
     # Embed Figures 4 and 3
-    fig4_path = r"d:\downloads\ADSA Proj\data\figures\fig4_scalability_analysis.png"
-    fig3_path = r"d:\downloads\ADSA Proj\data\figures\fig3_load_variance_over_time.png"
+    fig4_path = os.path.join(FIG_DIR, "fig4_scalability_analysis.png")
+    fig3_path = os.path.join(FIG_DIR, "fig3_load_variance_over_time.png")
     if os.path.exists(fig4_path) and os.path.exists(fig3_path):
         img4 = Image(fig4_path, width=250, height=125)
         img3 = Image(fig3_path, width=250, height=125)
@@ -604,9 +609,9 @@ def build_pdf(filename="FACULTY_PRESENTATION_AND_JUSTIFICATION_GUIDE.pdf"):
     # EMBED FIGURES 1, 2, 5 + LIVE DEMO PROTOCOL
     # -------------------------------------------------------------
     story.append(Paragraph("4.1. Additional Publication Figures (Heatmaps, Cluster Scaling, CDF)", h2_style))
-    fig1_path = r"d:\downloads\ADSA Proj\data\figures\fig1_load_distribution_heatmap.png"
-    fig2_path = r"d:\downloads\ADSA Proj\data\figures\fig2_makespan_vs_cluster_size.png"
-    fig5_path = r"d:\downloads\ADSA Proj\data\figures\fig5_cdf_wait_times.png"
+    fig1_path = os.path.join(FIG_DIR, "fig1_load_distribution_heatmap.png")
+    fig2_path = os.path.join(FIG_DIR, "fig2_makespan_vs_cluster_size.png")
+    fig5_path = os.path.join(FIG_DIR, "fig5_cdf_wait_times.png")
     
     if os.path.exists(fig1_path) and os.path.exists(fig5_path):
         img1 = Image(fig1_path, width=250, height=125)

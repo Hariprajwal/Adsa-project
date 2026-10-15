@@ -56,8 +56,12 @@ class NumberedCanvas(canvas.Canvas):
         self.drawRightString(page_w - 36, 20, page_str)
         self.restoreState()
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DOCS_PDF_DIR = os.path.join(BASE_DIR, "docs", "pdf")
+
 def build_pdf(filename="BENCHMARK_RESULTS_AND_IMPLEMENTATION_ATTESTATION.pdf"):
-    pdf_path = os.path.join(r"d:\downloads\ADSA Proj", filename)
+    os.makedirs(DOCS_PDF_DIR, exist_ok=True)
+    pdf_path = os.path.join(DOCS_PDF_DIR, filename)
     doc = SimpleDocTemplate(
         pdf_path,
         pagesize=A4,

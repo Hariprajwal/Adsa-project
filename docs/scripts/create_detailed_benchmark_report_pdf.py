@@ -56,8 +56,13 @@ class NumberedCanvas(canvas.Canvas):
         self.drawRightString(page_w - 36, 20, page_str)
         self.restoreState()
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DOCS_PDF_DIR = os.path.join(BASE_DIR, "docs", "pdf")
+FIG_DIR = os.path.join(BASE_DIR, "data", "figures")
+
 def build_pdf(filename="DETAILED_BENCHMARK_RESULTS_AND_IMPLEMENTATION_VERIFICATION_REPORT.pdf"):
-    pdf_path = os.path.join(r"d:\downloads\ADSA Proj", filename)
+    os.makedirs(DOCS_PDF_DIR, exist_ok=True)
+    pdf_path = os.path.join(DOCS_PDF_DIR, filename)
     doc = SimpleDocTemplate(
         pdf_path,
         pagesize=A4,
@@ -339,7 +344,7 @@ def build_pdf(filename="DETAILED_BENCHMARK_RESULTS_AND_IMPLEMENTATION_VERIFICATI
     story.append(Spacer(1, 6))
     
     # Embed Fig 4: Scalability Analysis
-    fig4_path = r"d:\downloads\ADSA Proj\data\figures\fig4_scalability_analysis.png"
+    fig4_path = os.path.join(FIG_DIR, "fig4_scalability_analysis.png")
     if os.path.exists(fig4_path):
         img4 = Image(fig4_path, width=400, height=140)
         t_fig4 = Table([[img4], [Paragraph("<b>Figure 4: Scalability Microbenchmark (Dispatch Latency vs. Cluster Dimension N).</b> Confirms logarithmic scaling curve of the Proposed Hierarchical Balancer against linear search blowouts of Least-Loaded Node.", table_cell)]], colWidths=[523])
@@ -424,7 +429,7 @@ def build_pdf(filename="DETAILED_BENCHMARK_RESULTS_AND_IMPLEMENTATION_VERIFICATI
     story.append(Spacer(1, 5))
     
     # Embed Fig 3: Load Variance Over Time
-    fig3_path = r"d:\downloads\ADSA Proj\data\figures\fig3_load_variance_over_time.png"
+    fig3_path = os.path.join(FIG_DIR, "fig3_load_variance_over_time.png")
     if os.path.exists(fig3_path):
         img3 = Image(fig3_path, width=400, height=135)
         t_fig3 = Table([[img3], [Paragraph("<b>Figure 3: Instantaneous Load Variance Over Simulation Timeline (data/figures/fig3_load_variance_over_time.png).</b> Generated directly from the 310 telemetry steps in <code>data/benchmark_results.json</code>, illustrating how the Proposed Balancer suppresses variance spikes.", table_cell)]], colWidths=[523])
@@ -468,8 +473,8 @@ def build_pdf(filename="DETAILED_BENCHMARK_RESULTS_AND_IMPLEMENTATION_VERIFICATI
     story.append(Spacer(1, 6))
     
     # Embed Fig 1 & Fig 5
-    fig1_path = r"d:\downloads\ADSA Proj\data\figures\fig1_load_distribution_heatmap.png"
-    fig5_path = r"d:\downloads\ADSA Proj\data\figures\fig5_cdf_wait_times.png"
+    fig1_path = os.path.join(FIG_DIR, "fig1_load_distribution_heatmap.png")
+    fig5_path = os.path.join(FIG_DIR, "fig5_cdf_wait_times.png")
     if os.path.exists(fig1_path) and os.path.exists(fig5_path):
         img1 = Image(fig1_path, width=250, height=125)
         img5 = Image(fig5_path, width=250, height=125)
@@ -491,7 +496,7 @@ def build_pdf(filename="DETAILED_BENCHMARK_RESULTS_AND_IMPLEMENTATION_VERIFICATI
         story.append(Spacer(1, 6))
         
     # Embed Fig 2
-    fig2_path = r"d:\downloads\ADSA Proj\data\figures\fig2_makespan_vs_cluster_size.png"
+    fig2_path = os.path.join(FIG_DIR, "fig2_makespan_vs_cluster_size.png")
     if os.path.exists(fig2_path):
         img2 = Image(fig2_path, width=400, height=125)
         t_fig2 = Table([[img2], [Paragraph("<b>Figure 2: Workload Makespan vs. Cluster Size N (128 to 1,024 nodes).</b> Demonstrates consistent throughput across scaling configurations.", table_cell)]], colWidths=[523])

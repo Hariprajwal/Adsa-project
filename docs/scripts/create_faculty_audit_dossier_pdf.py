@@ -56,8 +56,13 @@ class NumberedCanvas(canvas.Canvas):
         self.drawRightString(page_w - 36, 20, page_str)
         self.restoreState()
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DOCS_PDF_DIR = os.path.join(BASE_DIR, "docs", "pdf")
+FIG_DIR = os.path.join(BASE_DIR, "data", "figures")
+
 def build_pdf(filename="FACULTY_COMPREHENSIVE_AUDIT_DOSSIER.pdf"):
-    pdf_path = os.path.join(r"d:\downloads\ADSA Proj", filename)
+    os.makedirs(DOCS_PDF_DIR, exist_ok=True)
+    pdf_path = os.path.join(DOCS_PDF_DIR, filename)
     doc = SimpleDocTemplate(
         pdf_path,
         pagesize=A4,
@@ -395,8 +400,8 @@ def build_pdf(filename="FACULTY_COMPREHENSIVE_AUDIT_DOSSIER.pdf"):
     story.append(Spacer(1, 5))
     
     # Embed Fig 4 & Fig 3
-    fig4_path = r"d:\downloads\ADSA Proj\data\figures\fig4_scalability_analysis.png"
-    fig3_path = r"d:\downloads\ADSA Proj\data\figures\fig3_load_variance_over_time.png"
+    fig4_path = os.path.join(FIG_DIR, "fig4_scalability_analysis.png")
+    fig3_path = os.path.join(FIG_DIR, "fig3_load_variance_over_time.png")
     if os.path.exists(fig4_path) and os.path.exists(fig3_path):
         img4 = Image(fig4_path, width=250, height=115)
         img3 = Image(fig3_path, width=250, height=115)

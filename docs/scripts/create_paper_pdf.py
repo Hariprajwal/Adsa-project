@@ -62,8 +62,13 @@ class NumberedCanvas(canvas.Canvas):
         self.drawRightString(page_w - 45, 26, page_str)
         self.restoreState()
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DOCS_PDF_DIR = os.path.join(BASE_DIR, "docs", "pdf")
+FIG_DIR = os.path.join(BASE_DIR, "data", "figures")
+
 def build_paper_pdf(filename="RESEARCH_PAPER.pdf"):
-    pdf_path = os.path.join(r"d:\downloads\ADSA Proj", filename)
+    os.makedirs(DOCS_PDF_DIR, exist_ok=True)
+    pdf_path = os.path.join(DOCS_PDF_DIR, filename)
     doc = SimpleDocTemplate(
         pdf_path,
         pagesize=A4,
@@ -410,7 +415,7 @@ def build_paper_pdf(filename="RESEARCH_PAPER.pdf"):
 
     # FIGURES SECTION
     story.append(Paragraph("<b>B. Publication Figures & Visualizations:</b>", h2_style))
-    fig_dir = r"d:\downloads\ADSA Proj\data\figures"
+    fig_dir = FIG_DIR
     
     # Figure 1
     f1_path = os.path.join(fig_dir, "fig1_load_distribution_heatmap.png")

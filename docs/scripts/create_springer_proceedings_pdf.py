@@ -93,10 +93,14 @@ class SpringerNumberedCanvas(canvas.Canvas):
         self.restoreState()
 
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DOCS_PDF_DIR = os.path.join(BASE_DIR, "docs", "pdf")
+FIG_DIR = os.path.join(BASE_DIR, "data", "figures")
+
 def build_springer_pdf(filename="SPRINGER_CONFERENCE_PROCEEDINGS_REPORT.pdf"):
-    base_dir = r"d:\downloads\ADSA Proj"
-    pdf_path = os.path.join(base_dir, filename)
-    fig_dir = os.path.join(base_dir, "data", "figures")
+    os.makedirs(DOCS_PDF_DIR, exist_ok=True)
+    pdf_path = os.path.join(DOCS_PDF_DIR, filename)
+    fig_dir = FIG_DIR
 
     # Document Geometry: Standard Springer Proceedings A4 Margins
     # Printable area: 595.27 x 841.89 pt. 50pt margins (~1.76 cm) -> 495pt text width (~174 mm)
