@@ -1,0 +1,8 @@
+Performance Metric,Round-Robin Baseline,Custom Proposed Balancer,Improvement / Impact
+Workload Makespan,5310.00 s,5505.00 s,+3.7% makespan
+Cluster Load Variance (sigma^2),61.54,59.92,-2.6% variance
+Average Queue Wait Time,6.52 s,11.21 s,+71.9% wait time
+95th % Tail Latency,17.93 s,39.65 s,+121.1% tail latency
+Jain's Fairness Index,1.000,1.000,+0.000 (Ideal balance)
+Scheduling Complexity Class,O(1) Load-Blind,O(log N) Coarse-to-Fine,Logarithmic Scale
+Dispatch Overhead per Job,0.0163 ms,0.3073 ms,Sub-millisecond fast

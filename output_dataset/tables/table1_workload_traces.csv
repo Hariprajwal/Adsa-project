@@ -1,0 +1,4 @@
+Dataset Name,HPC System Description,Recorded Jobs,Total Nodes,Trace Duration (h),Mean Job Runtime (s),Std Dev Runtime (s)
+LANL-HPC.swf,LANL HPC Center (CM5/O2K),2000,1024,30.0,1307.9,2333.56
+LLNL-Thunder.swf,LLNL Thunder Supercomputer,2500,4096,49.46,3742.82,3888.1
+CEA-Curie.swf,CEA Curie Supercomputer (Bullx),2500,5040,18.18,845.76,1017.91

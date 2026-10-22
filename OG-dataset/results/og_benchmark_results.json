@@ -1,0 +1,64 @@
+{
+  "trace_info": {
+    "raw_jobs_loaded": 1500,
+    "cluster_computer": "CEA Curie Cluster",
+    "max_nodes": 5544,
+    "max_procs": 93312,
+    "mean_runtime_s": 11091.000666666667,
+    "max_runtime_s": 86608,
+    "mean_procs": 763.2906666666667
+  },
+  "trace_label": "CEA Curie Supercomputer (Bullx DLC, 5040 Nodes)",
+  "results": {
+    "hierarchical": {
+      "policy_name": "hierarchical",
+      "makespan_seconds": 34360.0,
+      "avg_load_variance": 185.95,
+      "avg_wait_time_seconds": 177.32,
+      "tail_wait_time_95_seconds": 437.69,
+      "jains_fairness_index": 1.0,
+      "avg_dispatch_overhead_ms": 0.1886,
+      "total_jobs": 1500
+    },
+    "least_loaded": {
+      "policy_name": "least_loaded",
+      "makespan_seconds": 34260.0,
+      "avg_load_variance": 221.78,
+      "avg_wait_time_seconds": 189.56,
+      "tail_wait_time_95_seconds": 480.92,
+      "jains_fairness_index": 1.0,
+      "avg_dispatch_overhead_ms": 0.1013,
+      "total_jobs": 1500
+    },
+    "round_robin": {
+      "policy_name": "round_robin",
+      "makespan_seconds": 34760.0,
+      "avg_load_variance": 253.24,
+      "avg_wait_time_seconds": 242.88,
+      "tail_wait_time_95_seconds": 528.84,
+      "jains_fairness_index": 1.0,
+      "avg_dispatch_overhead_ms": 0.0198,
+      "total_jobs": 1500
+    },
+    "work_queue": {
+      "policy_name": "work_queue",
+      "makespan_seconds": 35310.0,
+      "avg_load_variance": 720.27,
+      "avg_wait_time_seconds": 490.76,
+      "tail_wait_time_95_seconds": 1161.5,
+      "jains_fairness_index": 1.0,
+      "avg_dispatch_overhead_ms": 0.0184,
+      "total_jobs": 1500
+    },
+    "random": {
+      "policy_name": "random",
+      "makespan_seconds": 34380.0,
+      "avg_load_variance": 368.3,
+      "avg_wait_time_seconds": 294.38,
+      "tail_wait_time_95_seconds": 934.26,
+      "jains_fairness_index": 1.0,
+      "avg_dispatch_overhead_ms": 0.0185,
+      "total_jobs": 1500
+    }
+  }
+}

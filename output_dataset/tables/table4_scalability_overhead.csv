@@ -1,0 +1,5 @@
+Scheduling Method,Overhead per Job N=128 (ms),Overhead per Job N=512 (ms),Overhead per Job N=1024 (ms),Complexity Class,Scalability Trend
+Round-Robin (RR),0.0172,0.0155,0.019,O(1),"Constant time, load-blind"
+Least-Loaded Node (LLN),0.0849,0.3007,0.6391,O(N),Severe linear search degradation
+Centralized Work Queue,0.0156,0.0167,0.0182,O(1) - O(N),Queue lock serialization contention
+Proposed Hierarchical Balancer,0.1564,0.2829,0.4812,O(log N),Flat logarithmic scaling (sub-millisecond)

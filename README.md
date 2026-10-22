@@ -47,19 +47,28 @@ ADSA Proj/
 ### 1. Requirements
 - Python 3.10+
 
-### 2. Quick Start: Launch the Live Video Player Dashboard
-You can run the entire cluster streamer with a single double-click on Windows:
+### 2. Quick Start: Launch the Live Video Player Dashboard (`run.bat`)
+You can run the live cluster streamer with a single double-click on Windows:
 
 ```cmd
 run.bat
 ```
 This automatically verifies dependencies, starts the FastAPI server on **http://127.0.0.1:8080**, and opens the dashboard in your default browser.
 
-Or run manually with Python:
-```bash
-pip install -r requirements.txt
-python -m uvicorn src.web.app:app --host 127.0.0.1 --port 8080 --reload
+### 3. Master Automation & Dataset Control Panel (`super.bat`)
+Run the all-in-one execution suite to run any Python module without `ModuleNotFoundError`, populate official datasets, generate publication plots/tables, and export everything to `output_dataset/`:
+
+```cmd
+super.bat
 ```
+
+Or run direct non-interactive CLI shortcuts:
+- `super.bat data` : Populates all datasets (traces, synthetic, tables, figures) into `output_dataset/`
+- `super.bat pipeline` : Executes full pipeline (Traces -> Simulation -> Benchmarks -> Figures -> Tables -> Export)
+- `super.bat test` : Runs unit & integration test suite (Phases 1-4)
+- `super.bat run tests\test_phase1.py` : Executes any Python script with project `PYTHONPATH` pre-configured
+- `super.bat open` : Opens `output_dataset/` folder in Windows File Explorer
+- `super.bat help` : Displays all CLI commands and options
 
 ---
 

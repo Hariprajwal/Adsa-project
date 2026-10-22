@@ -1,0 +1,5 @@
+Scheduling Policy,Makespan (s),Avg Wait Time (s),95th Percentile Wait Time (s),Tail Latency Reduction vs RR
+Round-Robin (RR),3615.0,3.43,9.65,Baseline
+Least-Loaded Node (LLN),4440.0,9.69,28.12,--191.4%
+Centralized Work Queue,4650.0,107.08,264.89,--2645.0%
+Proposed Hierarchical Balancer,4650.0,3.58,10.83,--12.2%
