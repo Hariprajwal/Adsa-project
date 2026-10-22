@@ -17,7 +17,7 @@
       "avg_wait_time_seconds": 177.32,
       "tail_wait_time_95_seconds": 437.69,
       "jains_fairness_index": 1.0,
-      "avg_dispatch_overhead_ms": 0.1886,
+      "avg_dispatch_overhead_ms": 0.171,
       "total_jobs": 1500
     },
     "least_loaded": {
@@ -27,7 +27,7 @@
       "avg_wait_time_seconds": 189.56,
       "tail_wait_time_95_seconds": 480.92,
       "jains_fairness_index": 1.0,
-      "avg_dispatch_overhead_ms": 0.1013,
+      "avg_dispatch_overhead_ms": 0.1024,
       "total_jobs": 1500
     },
     "round_robin": {
@@ -37,7 +37,7 @@
       "avg_wait_time_seconds": 242.88,
       "tail_wait_time_95_seconds": 528.84,
       "jains_fairness_index": 1.0,
-      "avg_dispatch_overhead_ms": 0.0198,
+      "avg_dispatch_overhead_ms": 0.0185,
       "total_jobs": 1500
     },
     "work_queue": {
@@ -47,7 +47,7 @@
       "avg_wait_time_seconds": 490.76,
       "tail_wait_time_95_seconds": 1161.5,
       "jains_fairness_index": 1.0,
-      "avg_dispatch_overhead_ms": 0.0184,
+      "avg_dispatch_overhead_ms": 0.0214,
       "total_jobs": 1500
     },
     "random": {
@@ -57,7 +57,7 @@
       "avg_wait_time_seconds": 294.38,
       "tail_wait_time_95_seconds": 934.26,
       "jains_fairness_index": 1.0,
-      "avg_dispatch_overhead_ms": 0.0185,
+      "avg_dispatch_overhead_ms": 0.0209,
       "total_jobs": 1500
     }
   }

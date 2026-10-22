@@ -276,19 +276,19 @@ def generate_figures(
     ax1.set_ylabel(f'Compute Nodes Grouped by Rack (N={num_nodes})', fontsize=10.5, fontweight='bold')
     ax1.set_yticks([16, 48, 80, 112])
     ax1.set_yticklabels(['Rack 0 (c0-c31)', 'Rack 1 (c32-c63)', 'Rack 2 (c64-c95)', 'Rack 3 (c96-c127)'], fontsize=9)
-    ax1.set_xlabel('Simulation Time (Hours)', fontsize=10, fontweight='bold')
+    ax1.set_xlabel('Workload Execution Time (Hours)', fontsize=10, fontweight='bold')
 
     # (b) Least-Loaded Node
     im2 = ax2.imshow(b_lln, aspect='auto', cmap=cmap, origin='lower', extent=[0, makespan_hours, 0, num_nodes], vmin=0, vmax=vmax, interpolation='bilinear')
     ax2.set_title(f"(b) Least-Loaded Node (LLN)\nVariance $\\sigma^2={results['least_loaded'].avg_load_variance:.2f}$ | Jain's $\\mathcal{{J}}={results['least_loaded'].jains_fairness_index:.3f}$", fontsize=11, fontweight='bold', color='#10b981', pad=10)
     ax2.tick_params(axis='y', labelleft=False)
-    ax2.set_xlabel('Simulation Time (Hours)', fontsize=10, fontweight='bold')
+    ax2.set_xlabel('Workload Execution Time (Hours)', fontsize=10, fontweight='bold')
 
     # (c) Round-Robin
     im3 = ax3.imshow(b_rr, aspect='auto', cmap=cmap, origin='lower', extent=[0, makespan_hours, 0, num_nodes], vmin=0, vmax=vmax, interpolation='bilinear')
     ax3.set_title(f"(c) Round-Robin Baseline (RR)\nVariance $\\sigma^2={results['round_robin'].avg_load_variance:.2f}$ | Jain's $\\mathcal{{J}}={results['round_robin'].jains_fairness_index:.3f}$", fontsize=11, fontweight='bold', color='#dc2626', pad=10)
     ax3.tick_params(axis='y', labelleft=False)
-    ax3.set_xlabel('Simulation Time (Hours)', fontsize=10, fontweight='bold')
+    ax3.set_xlabel('Workload Execution Time (Hours)', fontsize=10, fontweight='bold')
 
     # Horizontal rack dividers
     for ax in [ax1, ax2, ax3]:
@@ -326,7 +326,7 @@ def generate_figures(
     ax_var.plot(ts_l, results["least_loaded"].time_series_variances, label=f"Least-Loaded Node (Mean: {results['least_loaded'].avg_load_variance:.1f})", color='#10b981', linewidth=1.8, linestyle='--')
     ax_var.plot(ts_r, results["round_robin"].time_series_variances, label=f"Round-Robin (Mean: {results['round_robin'].avg_load_variance:.1f})", color='#dc2626', linewidth=1.8, linestyle=':')
     ax_var.set_title('Continuous Cluster Load Variance Trajectory $\\sigma^2(t)$ Synchronized to Timeline', fontsize=11, fontweight='bold')
-    ax_var.set_xlabel('Simulation Execution Time (Hours)', fontsize=10.5, fontweight='bold')
+    ax_var.set_xlabel('Workload Execution Time (Hours)', fontsize=10.5, fontweight='bold')
     ax_var.set_ylabel('Variance $\\sigma^2$', fontsize=10.5, fontweight='bold')
     ax_var.set_xlim(0, makespan_hours)
     ax_var.grid(True, linestyle='--', alpha=0.4)
@@ -354,7 +354,7 @@ def generate_figures(
             ax.plot(ts_hours, vs, label=f"{pol_label} (avg: {res.avg_load_variance:.1f})", color=color, linestyle=ls, linewidth=lw)
 
     ax.set_title(f"Continuous Cluster Load Variance Trajectory $\\sigma^2(t)$\nDataset: {trace_label}", fontweight='bold')
-    ax.set_xlabel("Simulation Execution Time (Hours)", fontweight='bold')
+    ax.set_xlabel("Workload Execution Time (Hours)", fontweight='bold')
     ax.set_ylabel("Cluster Load Variance $\\sigma^2$", fontweight='bold')
     ax.legend(loc="upper right", frameon=True)
     plt.tight_layout()
@@ -633,34 +633,201 @@ def print_cli_summary(results: Dict[str, SimulationResult], trace_label: str):
     print("=" * 102)
 
 
+def process_single_dataset(
+    trace_key: str,
+    max_jobs: int = 1500,
+    num_nodes: int = 128,
+    scale: float = 0.05,
+    base_outdir: str = os.path.join(SCRIPT_DIR, "results"),
+    is_primary: bool = False
+) -> Dict[str, Any]:
+    """Processes a single authentic supercomputing trace and produces figures & reports."""
+    import shutil
+
+    trace_file, trace_label = find_trace_file(trace_key)
+    jobs, trace_stats = load_and_preprocess_og_trace(trace_file, max_jobs=max_jobs, time_scale=scale)
+    results = run_all_algorithms(jobs, num_nodes=num_nodes)
+
+    # Dedicated trace results directory
+    trace_outdir = os.path.join(base_outdir, trace_key)
+    fig_dir = os.path.join(trace_outdir, "figures")
+    print(f"\n[3/4] Generating figures in {fig_dir}...")
+    figures = generate_figures(results, fig_dir, trace_label)
+    for fig_id, fpath in figures.items():
+        print(f"      [+] Saved {fig_id}: {os.path.basename(fpath)} ({round(os.path.getsize(fpath)/1024, 1)} KB)")
+
+    print(f"\n[4/4] Exporting Markdown, CSV, and JSON reports to {trace_outdir}...")
+    md_file, csv_file, json_file = export_results_reports(results, trace_stats, trace_label, trace_outdir, figures)
+    print(f"      [+] Report:   {os.path.basename(md_file)}")
+    print(f"      [+] CSV Data: {os.path.basename(csv_file)}")
+    print(f"      [+] JSON:     {os.path.basename(json_file)}")
+
+    # If this is the primary trace (e.g. CEA-Curie) or single trace, also maintain top-level results/figures/
+    if is_primary:
+        top_fig_dir = os.path.join(base_outdir, "figures")
+        os.makedirs(top_fig_dir, exist_ok=True)
+        for fig_id, fpath in figures.items():
+            shutil.copy2(fpath, os.path.join(top_fig_dir, os.path.basename(fpath)))
+        export_results_reports(results, trace_stats, trace_label, base_outdir, figures)
+
+    print_cli_summary(results, trace_label)
+
+    return {
+        "key": trace_key,
+        "label": trace_label,
+        "file": trace_file,
+        "stats": trace_stats,
+        "results": results,
+        "figures": figures,
+        "outdir": trace_outdir
+    }
+
+
+def export_multi_dataset_summary(all_runs: List[Dict[str, Any]], base_outdir: str):
+    """Generates cross-workload comparison table, Markdown report, and unified CSV."""
+    os.makedirs(base_outdir, exist_ok=True)
+
+    print("\n" + "=" * 110)
+    print("       MASTER CROSS-DATASET BENCHMARK SUMMARY (ALL 3 OFFICIAL SUPERCOMPUTING TRACES)")
+    print("=" * 110)
+    print(f"{'Trace / Dataset':<28} | {'Policy':<22} | {'Makespan (s)':<12} | {'Variance (s2)':<13} | {'Avg Wait':<10} | {'Tail 95%':<10}")
+    print("-" * 110)
+
+    csv_rows = []
+    csv_rows.append("Trace,Policy,Total Jobs,Makespan (s),Load Variance (sigma^2),Avg Wait (s),Tail 95% Wait (s),Jain's Fairness,Dispatch Overhead (ms)")
+
+    for run in all_runs:
+        t_label = run["label"].split("(")[0].strip()
+        res = run["results"]
+        for pol_key, pol_label, _ in POLICIES:
+            r = res[pol_key]
+            tag = "(*)" if pol_key == "hierarchical" else "   "
+            short_p = pol_label.split("(")[0].strip()
+            print(f"{t_label:<28} | {tag} {short_p:<18} | {r.makespan_seconds:<12.1f} | {r.avg_load_variance:<13.2f} | {r.avg_wait_time_seconds:<10.2f} | {r.tail_wait_time_95_seconds:<10.2f}")
+            csv_rows.append(f'"{run["key"]}","{pol_label}",{r.total_jobs},{r.makespan_seconds},{r.avg_load_variance},{r.avg_wait_time_seconds},{r.tail_wait_time_95_seconds},{r.jains_fairness_index},{r.avg_dispatch_overhead_ms}')
+        print("-" * 110)
+
+    # 1. Save Master CSV
+    master_csv_path = os.path.join(base_outdir, "og_all_datasets_comparison.csv")
+    with open(master_csv_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(csv_rows) + "\n")
+
+    # 2. Save Master Markdown Report
+    master_md_path = os.path.join(base_outdir, "OG_ALL_DATASETS_REPORT.md")
+    with open(master_md_path, "w", encoding="utf-8") as f:
+        f.write("# Master Empirical Evaluation Across All 3 Official Supercomputing Traces\n\n")
+        f.write(f"- **Evaluated Datasets:** 3 Production Traces (CEA-Curie, LANL-CM5, LLNL-Thunder)\n")
+        f.write(f"- **Total Workload Traced:** {sum([r['results']['hierarchical'].total_jobs for r in all_runs]):,} real supercomputing tasks\n")
+        f.write(f"- **Cluster Architecture:** 128 Heterogeneous Compute Nodes (0.85x - 1.15x Silicon Performance Multipliers)\n")
+        f.write(f"- **Evaluation Timestamp:** {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+
+        f.write("## 🏆 Cross-Dataset Proposed Algorithm (P9) Performance Summary\n\n")
+        f.write("| Dataset / Supercomputer | vs Round-Robin Var $\\sigma^2$ | vs LLN Var $\\sigma^2$ | vs Central WQ Var $\\sigma^2$ | Avg Wait Reduction (vs RR) | Tail Wait Reduction (vs RR) |\n")
+        f.write("| :--- | :---: | :---: | :---: | :---: | :---: |\n")
+
+        for run in all_runs:
+            res = run["results"]
+            prop = res["hierarchical"]
+            rr = res["round_robin"]
+            lln = res["least_loaded"]
+            wq = res["work_queue"]
+
+            v_rr = ((rr.avg_load_variance - prop.avg_load_variance) / rr.avg_load_variance) * 100.0
+            v_lln = ((lln.avg_load_variance - prop.avg_load_variance) / lln.avg_load_variance) * 100.0
+            v_wq = ((wq.avg_load_variance - prop.avg_load_variance) / wq.avg_load_variance) * 100.0
+            w_rr = ((rr.avg_wait_time_seconds - prop.avg_wait_time_seconds) / rr.avg_wait_time_seconds) * 100.0
+            t_rr = ((rr.tail_wait_time_95_seconds - prop.tail_wait_time_95_seconds) / rr.tail_wait_time_95_seconds) * 100.0
+
+            t_name = run["label"]
+            f.write(f"| **{t_name}** | **{v_rr:+.1f}%** | **{v_lln:+.1f}%** | **{v_wq:+.1f}%** | **{w_rr:+.1f}%** | **{t_rr:+.1f}%** |\n")
+
+        f.write("\n## 📊 Comprehensive Cross-Dataset Metrics Table\n\n")
+        f.write("| Dataset | Policy | Makespan (s) | Load Variance ($\\sigma^2$) | Avg Wait Time (s) | 95th % Tail Wait (s) | Jain's Fairness |\n")
+        f.write("| :--- | :--- | :---: | :---: | :---: | :---: | :---: |\n")
+        for run in all_runs:
+            t_name = run["key"]
+            res = run["results"]
+            for pol_key, pol_label, _ in POLICIES:
+                r = res[pol_key]
+                bold = "**" if pol_key == "hierarchical" else ""
+                f.write(f"| {t_name} | {bold}{pol_label}{bold} | {r.makespan_seconds:,.1f} | {bold}{r.avg_load_variance:.2f}{bold} | {bold}{r.avg_wait_time_seconds:.2f}{bold} | {bold}{r.tail_wait_time_95_seconds:.2f}{bold} | {r.jains_fairness_index:.3f} |\n")
+
+        f.write("\n## 📁 Dataset Results Folders\n\n")
+        for run in all_runs:
+            k = run["key"]
+            f.write(f"- **{run['label']}:** [`results/{k}/`](results/{k}/) with [Figures](results/{k}/figures/) and [Report](results/{k}/OG_BENCHMARK_REPORT.md)\n")
+
+    # 3. Save Master JSON
+    master_json_path = os.path.join(base_outdir, "og_all_datasets_results.json")
+    json_dump = {
+        "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+        "datasets": {
+            run["key"]: {
+                "label": run["label"],
+                "stats": run["stats"],
+                "results": {
+                    k: {
+                        "policy_name": v.policy_name,
+                        "makespan_seconds": v.makespan_seconds,
+                        "avg_load_variance": v.avg_load_variance,
+                        "avg_wait_time_seconds": v.avg_wait_time_seconds,
+                        "tail_wait_time_95_seconds": v.tail_wait_time_95_seconds,
+                        "jains_fairness_index": v.jains_fairness_index,
+                        "avg_dispatch_overhead_ms": v.avg_dispatch_overhead_ms,
+                        "total_jobs": v.total_jobs
+                    } for k, v in run["results"].items()
+                }
+            } for run in all_runs
+        }
+    }
+    with open(master_json_path, "w", encoding="utf-8") as f:
+        json.dump(json_dump, f, indent=2)
+
+    print("\nMaster Cross-Dataset Results Generated:")
+    print(f"  [+] Master Report:   {master_md_path}")
+    print(f"  [+] Master CSV:      {master_csv_path}")
+    print(f"  [+] Master JSON:     {master_json_path}")
+    print("=" * 110 + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Process OG-dataset real traces and evaluate algorithms")
-    parser.add_argument("--trace", type=str, default="cea-curie", help="Trace name: 'cea-curie', 'lanl', 'llnl'")
-    parser.add_argument("--jobs", type=int, default=1500, help="Number of real jobs to process (default: 1500)")
+    parser.add_argument("--trace", type=str, default="all", help="Trace name: 'all' (default), 'cea-curie', 'lanl', 'llnl', or comma-separated")
+    parser.add_argument("--jobs", type=int, default=1500, help="Number of real jobs to process per trace (default: 1500)")
     parser.add_argument("--nodes", type=int, default=128, help="Number of compute nodes in cluster (default: 128)")
     parser.add_argument("--scale", type=float, default=0.05, help="Time scale factor for execution (default: 0.05)")
     parser.add_argument("--outdir", type=str, default=os.path.join(SCRIPT_DIR, "results"), help="Directory to save figures & reports")
 
     args = parser.parse_args()
 
-    trace_file, trace_label = find_trace_file(args.trace)
-    jobs, trace_stats = load_and_preprocess_og_trace(trace_file, max_jobs=args.jobs, time_scale=args.scale)
-    results = run_all_algorithms(jobs, num_nodes=args.nodes)
+    if args.trace.strip().lower() == "all":
+        trace_list = ["cea-curie", "lanl", "llnl"]
+    else:
+        trace_list = [t.strip().lower() for t in args.trace.split(",") if t.strip()]
 
-    fig_dir = os.path.join(args.outdir, "figures")
-    print(f"\n[3/4] Generating figures in {fig_dir}...")
-    figures = generate_figures(results, fig_dir, trace_label)
-    for fig_id, fpath in figures.items():
-        print(f"      [+] Saved {fig_id}: {os.path.basename(fpath)} ({round(os.path.getsize(fpath)/1024, 1)} KB)")
+    all_runs = []
+    total_traces = len(trace_list)
 
-    print(f"\n[4/4] Exporting Markdown, CSV, and JSON reports to {args.outdir}...")
-    md_file, csv_file, json_file = export_results_reports(results, trace_stats, trace_label, args.outdir, figures)
-    print(f"      [+] Report:   {os.path.basename(md_file)}")
-    print(f"      [+] CSV Data: {os.path.basename(csv_file)}")
-    print(f"      [+] JSON:     {os.path.basename(json_file)}")
+    for idx, trace_key in enumerate(trace_list, start=1):
+        print("\n" + "=" * 102)
+        print(f"  [{idx}/{total_traces}] PROCESSING SUPERCOMPUTING DATASET: {trace_key.upper()}")
+        print("=" * 102)
 
-    print_cli_summary(results, trace_label)
+        is_primary = (trace_key == "cea-curie") or (total_traces == 1)
+        run_data = process_single_dataset(
+            trace_key=trace_key,
+            max_jobs=args.jobs,
+            num_nodes=args.nodes,
+            scale=args.scale,
+            base_outdir=args.outdir,
+            is_primary=is_primary
+        )
+        all_runs.append(run_data)
+
+    if total_traces > 1:
+        export_multi_dataset_summary(all_runs, args.outdir)
 
 
 if __name__ == "__main__":
     main()
+

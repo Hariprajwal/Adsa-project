@@ -3,7 +3,7 @@
 - **Trace Name:** `CEA Curie Supercomputer (Bullx DLC, 5040 Nodes)`
 - **Evaluated Jobs:** 1,500 real completed tasks
 - **Cluster Configuration:** 128 Nodes (Heterogeneous Silicon Speeds 0.85-1.15x)
-- **Generated At:** 2026-10-22 07:56:52
+- **Generated At:** 2026-10-22 08:13:02
 
 ## 🏆 Key Performance Highlights (Proposed Algorithm vs All 3 Baselines)
 
@@ -29,11 +29,11 @@
 
 | Policy | Makespan (s) | Load Variance ($\sigma^2$) | Avg Wait Time (s) | 95th % Tail Wait (s) | Jain's Fairness | Dispatch Overhead ($\mu s$) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Proposed Hierarchical (P9)** | 34,360.0 | **185.95** | **177.32** | **437.69** | 1.000 | 188.6 |
-| Least-Loaded Node (LLN) | 34,260.0 | 221.78 | 189.56 | 480.92 | 1.000 | 101.3 |
-| Round-Robin (RR) | 34,760.0 | 253.24 | 242.88 | 528.84 | 1.000 | 19.8 |
-| Centralized Work Queue (WQ) | 35,310.0 | 720.27 | 490.76 | 1161.50 | 1.000 | 18.4 |
-| Random Dispatch | 34,380.0 | 368.30 | 294.38 | 934.26 | 1.000 | 18.5 |
+| **Proposed Hierarchical (P9)** | 34,360.0 | **185.95** | **177.32** | **437.69** | 1.000 | 171.0 |
+| Least-Loaded Node (LLN) | 34,260.0 | 221.78 | 189.56 | 480.92 | 1.000 | 102.4 |
+| Round-Robin (RR) | 34,760.0 | 253.24 | 242.88 | 528.84 | 1.000 | 18.5 |
+| Centralized Work Queue (WQ) | 35,310.0 | 720.27 | 490.76 | 1161.50 | 1.000 | 21.4 |
+| Random Dispatch | 34,380.0 | 368.30 | 294.38 | 934.26 | 1.000 | 20.9 |
 
 ## 🖼️ Generated Figures
 

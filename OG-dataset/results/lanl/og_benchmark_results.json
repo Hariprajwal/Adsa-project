@@ -1,0 +1,64 @@
+{
+  "trace_info": {
+    "raw_jobs_loaded": 1500,
+    "cluster_computer": "Thinking Machines CM-5",
+    "max_nodes": 1024,
+    "max_procs": 1024,
+    "mean_runtime_s": 1834.3433333333332,
+    "max_runtime_s": 23087,
+    "mean_procs": 83.328
+  },
+  "trace_label": "Los Alamos National Lab (Thinking Machines CM-5, 1024 Nodes)",
+  "results": {
+    "hierarchical": {
+      "policy_name": "hierarchical",
+      "makespan_seconds": 23820.0,
+      "avg_load_variance": 327.99,
+      "avg_wait_time_seconds": 84.16,
+      "tail_wait_time_95_seconds": 256.44,
+      "jains_fairness_index": 1.0,
+      "avg_dispatch_overhead_ms": 0.1742,
+      "total_jobs": 1500
+    },
+    "least_loaded": {
+      "policy_name": "least_loaded",
+      "makespan_seconds": 24010.0,
+      "avg_load_variance": 338.48,
+      "avg_wait_time_seconds": 98.99,
+      "tail_wait_time_95_seconds": 277.62,
+      "jains_fairness_index": 1.0,
+      "avg_dispatch_overhead_ms": 0.1101,
+      "total_jobs": 1500
+    },
+    "round_robin": {
+      "policy_name": "round_robin",
+      "makespan_seconds": 23600.0,
+      "avg_load_variance": 276.36,
+      "avg_wait_time_seconds": 30.93,
+      "tail_wait_time_95_seconds": 90.61,
+      "jains_fairness_index": 1.0,
+      "avg_dispatch_overhead_ms": 0.0218,
+      "total_jobs": 1500
+    },
+    "work_queue": {
+      "policy_name": "work_queue",
+      "makespan_seconds": 25120.0,
+      "avg_load_variance": 371.03,
+      "avg_wait_time_seconds": 291.76,
+      "tail_wait_time_95_seconds": 709.67,
+      "jains_fairness_index": 1.0,
+      "avg_dispatch_overhead_ms": 0.0237,
+      "total_jobs": 1500
+    },
+    "random": {
+      "policy_name": "random",
+      "makespan_seconds": 23630.0,
+      "avg_load_variance": 271.15,
+      "avg_wait_time_seconds": 38.7,
+      "tail_wait_time_95_seconds": 127.33,
+      "jains_fairness_index": 1.0,
+      "avg_dispatch_overhead_ms": 0.0231,
+      "total_jobs": 1500
+    }
+  }
+}

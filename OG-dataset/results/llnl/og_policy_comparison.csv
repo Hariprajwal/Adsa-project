@@ -1,0 +1,6 @@
+Policy,Total Jobs,Makespan (s),Load Variance (sigma^2),Avg Wait Time (s),Tail 95% Wait (s),Jain's Fairness,Dispatch Overhead (ms)
+"Proposed Hierarchical (P9)",1500,30120.0,226.71,64.52,254.28,1.0,0.173
+"Least-Loaded Node (LLN)",1500,29740.0,232.69,67.61,300.37,1.0,0.1226
+"Round-Robin (RR)",1500,30500.0,237.86,93.6,493.39,1.0,0.0233
+"Centralized Work Queue (WQ)",1500,31770.0,341.35,293.39,1291.74,1.0,0.0274
+"Random Dispatch",1500,30140.0,253.66,110.56,504.91,1.0,0.0285
