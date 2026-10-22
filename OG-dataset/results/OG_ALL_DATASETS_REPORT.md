@@ -3,35 +3,35 @@
 - **Evaluated Datasets:** 3 Production Traces (CEA-Curie, LANL-CM5, LLNL-Thunder)
 - **Total Workload Traced:** 4,500 real supercomputing tasks
 - **Cluster Architecture:** 128 Heterogeneous Compute Nodes (0.85x - 1.15x Silicon Performance Multipliers)
-- **Evaluation Timestamp:** 2026-10-22 08:14:24
+- **Evaluation Timestamp:** 2026-10-22 23:13:41
 
 ## 🏆 Cross-Dataset Proposed Algorithm (P9) Performance Summary
 
 | Dataset / Supercomputer | vs Round-Robin Var $\sigma^2$ | vs LLN Var $\sigma^2$ | vs Central WQ Var $\sigma^2$ | Avg Wait Reduction (vs RR) | Tail Wait Reduction (vs RR) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **CEA Curie Supercomputer (Bullx DLC, 5040 Nodes)** | **+26.6%** | **+16.2%** | **+74.2%** | **+27.0%** | **+17.2%** |
-| **Los Alamos National Lab (Thinking Machines CM-5, 1024 Nodes)** | **-18.7%** | **+3.1%** | **+11.6%** | **-172.1%** | **-183.0%** |
-| **Lawrence Livermore National Lab (Thunder Cluster, 4008 Nodes)** | **+4.7%** | **+2.6%** | **+33.6%** | **+31.1%** | **+48.5%** |
+| **CEA Curie Supercomputer (Bullx DLC, 5040 Nodes)** | **+25.4%** | **+16.9%** | **+73.0%** | **+25.9%** | **+17.6%** |
+| **Los Alamos National Lab (Thinking Machines CM-5, 1024 Nodes)** | **-18.5%** | **+4.0%** | **+7.3%** | **-232.1%** | **-218.0%** |
+| **Lawrence Livermore National Lab (Thunder Cluster, 4008 Nodes)** | **+3.7%** | **+0.3%** | **+35.7%** | **+27.4%** | **+42.6%** |
 
 ## 📊 Comprehensive Cross-Dataset Metrics Table
 
 | Dataset | Policy | Makespan (s) | Load Variance ($\sigma^2$) | Avg Wait Time (s) | 95th % Tail Wait (s) | Jain's Fairness |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| cea-curie | **Proposed Hierarchical (P9)** | 34,360.0 | **185.95** | **177.32** | **437.69** | 1.000 |
-| cea-curie | Least-Loaded Node (LLN) | 34,260.0 | 221.78 | 189.56 | 480.92 | 1.000 |
-| cea-curie | Round-Robin (RR) | 34,760.0 | 253.24 | 242.88 | 528.84 | 1.000 |
-| cea-curie | Centralized Work Queue (WQ) | 35,310.0 | 720.27 | 490.76 | 1161.50 | 1.000 |
-| cea-curie | Random Dispatch | 34,380.0 | 368.30 | 294.38 | 934.26 | 1.000 |
-| lanl | **Proposed Hierarchical (P9)** | 23,820.0 | **327.99** | **84.16** | **256.44** | 1.000 |
-| lanl | Least-Loaded Node (LLN) | 24,010.0 | 338.48 | 98.99 | 277.62 | 1.000 |
-| lanl | Round-Robin (RR) | 23,600.0 | 276.36 | 30.93 | 90.61 | 1.000 |
-| lanl | Centralized Work Queue (WQ) | 25,120.0 | 371.03 | 291.76 | 709.67 | 1.000 |
-| lanl | Random Dispatch | 23,630.0 | 271.15 | 38.70 | 127.33 | 1.000 |
-| llnl | **Proposed Hierarchical (P9)** | 30,120.0 | **226.71** | **64.52** | **254.28** | 1.000 |
-| llnl | Least-Loaded Node (LLN) | 29,740.0 | 232.69 | 67.61 | 300.37 | 1.000 |
-| llnl | Round-Robin (RR) | 30,500.0 | 237.86 | 93.60 | 493.39 | 1.000 |
-| llnl | Centralized Work Queue (WQ) | 31,770.0 | 341.35 | 293.39 | 1291.74 | 1.000 |
-| llnl | Random Dispatch | 30,140.0 | 253.66 | 110.56 | 504.91 | 1.000 |
+| cea-curie | **Proposed Hierarchical (P9)** | 34,680.0 | **181.77** | **141.74** | **346.70** | 0.860 |
+| cea-curie | Least-Loaded Node (LLN) | 34,360.0 | 218.70 | 154.35 | 389.63 | 0.824 |
+| cea-curie | Round-Robin (RR) | 34,640.0 | 243.75 | 191.36 | 420.99 | 0.875 |
+| cea-curie | Centralized Work Queue (WQ) | 36,930.0 | 672.42 | 405.25 | 884.84 | 0.439 |
+| cea-curie | Random Dispatch | 34,540.0 | 353.51 | 222.30 | 716.31 | 0.814 |
+| lanl | **Proposed Hierarchical (P9)** | 23,890.0 | **313.62** | **72.10** | **209.86** | 0.229 |
+| lanl | Least-Loaded Node (LLN) | 23,780.0 | 326.58 | 85.32 | 244.70 | 0.197 |
+| lanl | Round-Robin (RR) | 23,580.0 | 264.74 | 21.71 | 65.99 | 0.757 |
+| lanl | Centralized Work Queue (WQ) | 24,230.0 | 338.28 | 289.48 | 856.77 | 0.108 |
+| lanl | Random Dispatch | 23,610.0 | 258.40 | 26.30 | 89.55 | 0.734 |
+| llnl | **Proposed Hierarchical (P9)** | 30,010.0 | **222.18** | **52.19** | **223.25** | 0.341 |
+| llnl | Least-Loaded Node (LLN) | 30,160.0 | 222.81 | 56.68 | 240.87 | 0.315 |
+| llnl | Round-Robin (RR) | 30,460.0 | 230.65 | 71.88 | 388.92 | 0.599 |
+| llnl | Centralized Work Queue (WQ) | 30,530.0 | 345.52 | 245.91 | 973.15 | 0.165 |
+| llnl | Random Dispatch | 30,220.0 | 229.85 | 78.73 | 354.61 | 0.606 |
 
 ## 📁 Dataset Results Folders
 

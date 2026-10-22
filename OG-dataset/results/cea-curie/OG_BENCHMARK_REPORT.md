@@ -3,37 +3,37 @@
 - **Trace Name:** `CEA Curie Supercomputer (Bullx DLC, 5040 Nodes)`
 - **Evaluated Jobs:** 1,500 real completed tasks
 - **Cluster Configuration:** 128 Nodes (Heterogeneous Silicon Speeds 0.85-1.15x)
-- **Generated At:** 2026-10-22 08:13:02
+- **Generated At:** 2026-10-22 23:13:10
 
 ## 🏆 Key Performance Highlights (Proposed Algorithm vs All 3 Baselines)
 
 ### 1. Load Variance Reduction (Lower Imbalance):
-- **vs Round-Robin (RR):** **+26.6%** (`185.95` vs `253.24`)
-- **vs Least-Loaded Node (LLN):** **+16.2%** (`185.95` vs `221.78`)
-- **vs Centralized Work Queue (WQ):** **+74.2%** (`185.95` vs `720.27`)
+- **vs Round-Robin (RR):** **+25.4%** (`181.77` vs `243.75`)
+- **vs Least-Loaded Node (LLN):** **+16.9%** (`181.77` vs `218.70`)
+- **vs Centralized Work Queue (WQ):** **+73.0%** (`181.77` vs `672.42`)
 
 ### 2. Average Job Wait Time Reduction:
-- **vs Round-Robin (RR):** **+27.0%** (`177.32s` vs `242.88s`)
-- **vs Least-Loaded Node (LLN):** **+6.5%** (`177.32s` vs `189.56s`)
-- **vs Centralized Work Queue (WQ):** **+63.9%** (`177.32s` vs `490.76s`)
+- **vs Round-Robin (RR):** **+25.9%** (`141.74s` vs `191.36s`)
+- **vs Least-Loaded Node (LLN):** **+8.2%** (`141.74s` vs `154.35s`)
+- **vs Centralized Work Queue (WQ):** **+65.0%** (`141.74s` vs `405.25s`)
 
 ### 3. 95th Percentile Tail Wait Latency Reduction:
-- **vs Round-Robin (RR):** **+17.2%** (`437.69s` vs `528.84s`)
-- **vs Least-Loaded Node (LLN):** **+9.0%** (`437.69s` vs `480.92s`)
-- **vs Centralized Work Queue (WQ):** **+62.3%** (`437.69s` vs `1161.50s`)
+- **vs Round-Robin (RR):** **+17.6%** (`346.70s` vs `420.99s`)
+- **vs Least-Loaded Node (LLN):** **+11.0%** (`346.70s` vs `389.63s`)
+- **vs Centralized Work Queue (WQ):** **+60.8%** (`346.70s` vs `884.84s`)
 
 ### 4. Cluster Load Equity:
-- **Jain's Fairness Index:** `1.000` across all nodes.
+- **Jain's Fairness Index:** `0.860` across all nodes.
 
 ## 📊 Comprehensive Empirical Metrics Table
 
 | Policy | Makespan (s) | Load Variance ($\sigma^2$) | Avg Wait Time (s) | 95th % Tail Wait (s) | Jain's Fairness | Dispatch Overhead ($\mu s$) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Proposed Hierarchical (P9)** | 34,360.0 | **185.95** | **177.32** | **437.69** | 1.000 | 171.0 |
-| Least-Loaded Node (LLN) | 34,260.0 | 221.78 | 189.56 | 480.92 | 1.000 | 102.4 |
-| Round-Robin (RR) | 34,760.0 | 253.24 | 242.88 | 528.84 | 1.000 | 18.5 |
-| Centralized Work Queue (WQ) | 35,310.0 | 720.27 | 490.76 | 1161.50 | 1.000 | 21.4 |
-| Random Dispatch | 34,380.0 | 368.30 | 294.38 | 934.26 | 1.000 | 20.9 |
+| **Proposed Hierarchical (P9)** | 34,680.0 | **181.77** | **141.74** | **346.70** | 0.860 | 74.4 |
+| Least-Loaded Node (LLN) | 34,360.0 | 218.70 | 154.35 | 389.63 | 0.824 | 44.3 |
+| Round-Robin (RR) | 34,640.0 | 243.75 | 191.36 | 420.99 | 0.875 | 8.5 |
+| Centralized Work Queue (WQ) | 36,930.0 | 672.42 | 405.25 | 884.84 | 0.439 | 9.2 |
+| Random Dispatch | 34,540.0 | 353.51 | 222.30 | 716.31 | 0.814 | 8.2 |
 
 ## 🖼️ Generated Figures
 

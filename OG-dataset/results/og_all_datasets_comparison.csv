@@ -1,16 +1,16 @@
 Trace,Policy,Total Jobs,Makespan (s),Load Variance (sigma^2),Avg Wait (s),Tail 95% Wait (s),Jain's Fairness,Dispatch Overhead (ms)
-"cea-curie","Proposed Hierarchical (P9)",1500,34360.0,185.95,177.32,437.69,1.0,0.171
-"cea-curie","Least-Loaded Node (LLN)",1500,34260.0,221.78,189.56,480.92,1.0,0.1024
-"cea-curie","Round-Robin (RR)",1500,34760.0,253.24,242.88,528.84,1.0,0.0185
-"cea-curie","Centralized Work Queue (WQ)",1500,35310.0,720.27,490.76,1161.5,1.0,0.0214
-"cea-curie","Random Dispatch",1500,34380.0,368.3,294.38,934.26,1.0,0.0209
-"lanl","Proposed Hierarchical (P9)",1500,23820.0,327.99,84.16,256.44,1.0,0.1742
-"lanl","Least-Loaded Node (LLN)",1500,24010.0,338.48,98.99,277.62,1.0,0.1101
-"lanl","Round-Robin (RR)",1500,23600.0,276.36,30.93,90.61,1.0,0.0218
-"lanl","Centralized Work Queue (WQ)",1500,25120.0,371.03,291.76,709.67,1.0,0.0237
-"lanl","Random Dispatch",1500,23630.0,271.15,38.7,127.33,1.0,0.0231
-"llnl","Proposed Hierarchical (P9)",1500,30120.0,226.71,64.52,254.28,1.0,0.173
-"llnl","Least-Loaded Node (LLN)",1500,29740.0,232.69,67.61,300.37,1.0,0.1226
-"llnl","Round-Robin (RR)",1500,30500.0,237.86,93.6,493.39,1.0,0.0233
-"llnl","Centralized Work Queue (WQ)",1500,31770.0,341.35,293.39,1291.74,1.0,0.0274
-"llnl","Random Dispatch",1500,30140.0,253.66,110.56,504.91,1.0,0.0285
+"cea-curie","Proposed Hierarchical (P9)",1500,34680.0,181.77,141.74,346.7,0.86,0.0744
+"cea-curie","Least-Loaded Node (LLN)",1500,34360.0,218.7,154.35,389.63,0.824,0.0443
+"cea-curie","Round-Robin (RR)",1500,34640.0,243.75,191.36,420.99,0.875,0.0085
+"cea-curie","Centralized Work Queue (WQ)",1500,36930.0,672.42,405.25,884.84,0.439,0.0092
+"cea-curie","Random Dispatch",1500,34540.0,353.51,222.3,716.31,0.814,0.0082
+"lanl","Proposed Hierarchical (P9)",1500,23890.0,313.62,72.1,209.86,0.229,0.0716
+"lanl","Least-Loaded Node (LLN)",1500,23780.0,326.58,85.32,244.7,0.197,0.0428
+"lanl","Round-Robin (RR)",1500,23580.0,264.74,21.71,65.99,0.757,0.0077
+"lanl","Centralized Work Queue (WQ)",1500,24230.0,338.28,289.48,856.77,0.108,0.0082
+"lanl","Random Dispatch",1500,23610.0,258.4,26.3,89.55,0.734,0.0086
+"llnl","Proposed Hierarchical (P9)",1500,30010.0,222.18,52.19,223.25,0.341,0.0652
+"llnl","Least-Loaded Node (LLN)",1500,30160.0,222.81,56.68,240.87,0.315,0.0444
+"llnl","Round-Robin (RR)",1500,30460.0,230.65,71.88,388.92,0.599,0.0077
+"llnl","Centralized Work Queue (WQ)",1500,30530.0,345.52,245.91,973.15,0.165,0.0081
+"llnl","Random Dispatch",1500,30220.0,229.85,78.73,354.61,0.606,0.0082

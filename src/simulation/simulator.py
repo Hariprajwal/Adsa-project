@@ -135,6 +135,7 @@ class DiscreteEventSimulator:
 
         active_running_jobs: Dict[str, Tuple[ComputeNode, Job, float]] = {} # job_id -> (node, job, completion_time)
         node_queue_depth: Dict[int, float] = {i: 0.0 for i in range(self.num_nodes)}
+        node_cumulative_work: Dict[int, float] = {i: 0.0 for i in range(self.num_nodes)}
 
         # Simulation Loop
         while event_queue:
@@ -163,15 +164,9 @@ class DiscreteEventSimulator:
                 is_volatile_node = (node.entropy_class == EntropyClass.HIGH or node_id in jitter_node_indices)
                 jitter_penalty = 1.35 if (is_volatile_node and job.is_predictable) else 1.0
                 
-                # Compute queue wait time
-                queue_wait = max(0.5, current_queue * 0.15 + (load_factor ** 2) * 12.0)
-                if policy == "round_robin":
-                    queue_wait += random.uniform(2.0, 15.0) * load_factor
-                elif policy == "random":
-                    queue_wait += random.uniform(3.0, 20.0) * load_factor
-                elif policy == "work_queue":
-                    # Lock contention delay under concurrency
-                    queue_wait += random.uniform(1.5, 8.0) * load_factor
+                # Genuine queuing wait time based on node backlog and non-linear saturation
+                # (Uniformly evaluated across all policies without artificial bias)
+                queue_wait = max(0.0, current_queue * 0.12 + (load_factor ** 2) * 8.0)
                 
                 # Execute job with node speed factor
                 speed = node_speeds[node_id]
@@ -179,6 +174,7 @@ class DiscreteEventSimulator:
                 
                 job_wait_times.append(queue_wait)
                 node_queue_depth[node_id] += exec_duration
+                node_cumulative_work[node_id] += exec_duration
                 
                 completion_time = current_time + queue_wait + exec_duration
                 active_running_jobs[job.job_id] = (node, job, completion_time)
@@ -239,11 +235,18 @@ class DiscreteEventSimulator:
         avg_var = sum(ts_variances) / len(ts_variances) if ts_variances else 0.0
         avg_disp = sum(dispatch_latencies) / len(dispatch_latencies) if dispatch_latencies else 0.0
 
-        # Jain's Fairness Index over final loads: (sum x_i)^2 / (N * sum x_i^2)
-        final_loads = [max(1.0, n.load.cpu) for n in nodes]
-        sum_l = sum(final_loads)
-        sum_sq = sum(l ** 2 for l in final_loads)
-        jains = (sum_l ** 2) / (self.num_nodes * sum_sq) if sum_sq > 0 else 1.0
+        # Genuine Jain's Fairness Index over time-averaged active node utilization during execution:
+        # J = (sum L_i)^2 / (N * sum L_i^2)
+        if ts_heatmaps:
+            active_loads = [max(0.5, float(np.mean([sample[i] for sample in ts_heatmaps]))) for i in range(self.num_nodes)]
+            sum_l = sum(active_loads)
+            sum_l_sq = sum(l ** 2 for l in active_loads)
+            jains = (sum_l ** 2) / (self.num_nodes * sum_l_sq) if sum_l_sq > 0 else 1.0
+        else:
+            work_values = [max(0.001, node_cumulative_work[i]) for i in range(self.num_nodes)]
+            sum_w = sum(work_values)
+            sum_w_sq = sum(w ** 2 for w in work_values)
+            jains = (sum_w ** 2) / (self.num_nodes * sum_w_sq) if sum_w_sq > 0 else 1.0
 
         return SimulationResult(
             policy_name=policy,
