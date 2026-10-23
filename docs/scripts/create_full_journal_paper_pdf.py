@@ -492,31 +492,15 @@ def build_ieee_journal_paper(filename="IEEE_JOURNAL_PAPER_14PAGE.pdf"):
     story.append(Paragraph("<b>A. System Architecture & End-to-End Pipeline</b>", subsec_heading_style))
     story.append(Paragraph("The proposed Entropy-Guided Hierarchical Load Balancing Framework operates as a closed-loop, telemetry-driven system. Arriving workloads from authentic trace feeds are characterized, mapped onto an augmented topological tree, filtered through entropy-based volatility guardrails, and continuously monitored through discrete-event telemetry feedback.", body_style))
 
-    # Architecture Pipeline Diagram Box
-    arch_ascii = """
-+----------------------------------------------------------------------------------------------------------+
-|                                    END-TO-END SCHEDULING PIPELINE ARCHITECTURE                           |
-+----------------------------------------------------------------------------------------------------------+
-|  [ Workload Arrival ]       [ Dynamic Profiler ]           [ Hierarchical Tree Dispatcher ]              |
-|  - Authentic .swf Trace  -> - Classify: CPU/Mem/IO     ->  - Level 0 (ClusterRoot): Min-Rack Selection    |
-|  - Submit Time, Procs       - Compute Dynamic Weights w     - Level 1 (RackNode): Min-Node Selection      |
-|  - Requested Duration                                       - Time Complexity: O(log N)                   |
-|                                                                         |                                |
-|                                                                         v                                |
-|  [ Cluster Heartbeat ]      [ Continuous Telemetry ]       [ Volatility Guardrails & Placement ]         |
-|  - Periodic Telemetry   <-  - CPU, Mem, Net, Disk      <-  - If Job Predictable & Node HIGH: Evade Node   |
-|  - Node Load Decay          - Update Sliding Window W       - Else: Dispatch Job & Propagate Metrics Up   |
-|                                                                         |                                |
-|                                                                         v                                |
-|  [ Dual-Entropy Engine ]    [ Stability Classifier ]       [ Proactive Macro Rebalancer ]                |
-|  - H_var = Var(CPU)     ->  - LOW:    H_var < 15.0     ->  - Detect Macro Shift (>20% Node State Drift)  |
-|  - H_Shannon = -Sum(p*log p)- MEDIUM: 15 <= H <= 50        - If Triggered: Rebuild Tree Topology         |
-|  - Sliding Window (W=10)    - HIGH:   H_var > 50.0          - Else: Incremental In-Place Upward Update    |
-+----------------------------------------------------------------------------------------------------------+
-"""
-    story.append(Paragraph(f"<pre>{arch_ascii.strip()}</pre>", code_style))
-    story.append(Paragraph("<i>Figure 1-A: Conceptual End-to-End System Architecture and Algorithmic Feedback Pipeline.</i>", caption_style))
-    story.append(Spacer(1, 4))
+    # Embed High-Resolution System Architecture Diagram
+    arch_img_path = os.path.join(DATA_FIG_DIR, "fig0_system_architecture.png")
+    if not os.path.exists(arch_img_path):
+        arch_img_path = os.path.join(OG_FIG_DIR, "fig0_system_architecture.png")
+    
+    if os.path.exists(arch_img_path):
+        story.append(Image(arch_img_path, width=520, height=210))
+        story.append(Paragraph("<b>Figure 1:</b> Conceptual End-to-End System Architecture and Closed-Loop Algorithmic Pipeline. Illustrates 18-column SWF ingestion, dynamic multi-resource profiling, augmented multi-tier tree dispatch in O(log N) time, dual-entropy stability classification, lateral neighbor guardrails, and continuous discrete-event telemetry feedback.", caption_style))
+    story.append(Spacer(1, 3))
 
     story.append(Paragraph("<b>B. Multi-Tier Cluster Topology Model</b>", subsec_heading_style))
     story.append(Paragraph("A heterogeneous HPC supercomputing cluster consisting of N compute nodes is organized into R physical server racks: R = ceil(N / K), where K denotes the maximum rack capacity (typically K = 32 or K = 64 nodes per rack). The cluster topology is modeled as an augmented, balanced 3-tier aggregation tree T:", body_style))
@@ -791,23 +775,23 @@ Output: Updated tree T, number of tasks migrated num_migrated
     story.append(t2_table)
     story.append(Spacer(1, 3))
 
-    # Embed Figure 1
+    # Embed Figure 2 (Heatmap)
     fig1_img_path = os.path.join(OG_FIG_DIR, "fig1_og_heatmap_proposed_vs_rr.png")
     if not os.path.exists(fig1_img_path):
         fig1_img_path = os.path.join(DATA_FIG_DIR, "fig1_load_distribution_heatmap.png")
     
     if os.path.exists(fig1_img_path):
         story.append(Image(fig1_img_path, width=520, height=185))
-        story.append(Paragraph("<b>Figure 1:</b> Spatio-Temporal Cluster Load Heatmap & Continuous Variance Evolution on CEA-Curie Supercomputer (1,500 Jobs, 128 Heterogeneous Nodes across 4 Racks). Top panels compare Proposed (a), Least-Loaded Node (b), and Round-Robin (c). Bottom panel illustrates continuous synchronized load variance trajectory σ²(t).", caption_style))
+        story.append(Paragraph("<b>Figure 2:</b> Spatio-Temporal Cluster Load Heatmap & Continuous Variance Evolution on CEA-Curie Supercomputer (1,500 Jobs, 128 Heterogeneous Nodes across 4 Racks). Top panels compare Proposed (a), Least-Loaded Node (b), and Round-Robin (c). Bottom panel illustrates continuous synchronized load variance trajectory σ²(t).", caption_style))
 
     story.append(PageBreak())
 
     # =========================================================================
-    # PAGE 11: HEATMAP DISCUSSION + TABLE 3 + FIGURE 2 (MAKESPAN)
+    # PAGE 11: HEATMAP DISCUSSION + TABLE 3 + FIGURE 3 (MAKESPAN)
     # =========================================================================
     story.append(Paragraph("IV. EXPERIMENTAL EVALUATION & RESULTS (Continued)", sec_heading_style))
-    story.append(Paragraph("<b>D. Deep Spatio-Temporal Heatmap Analysis (Figure 1)</b>", subsec_heading_style))
-    story.append(Paragraph("Figure 1 reveals the profound structural contrast in resource allocation across physical cluster racks. In Panel (c) (Round-Robin), severe horizontal saturation streaks exceeding 90% utilization persist across specific nodes for extended durations (e.g., Rack 0 nodes c10-c18). Because Round-Robin dispatches jobs blindly without inspecting node load or execution lengths, nodes that receive long-running scientific routines become stragglers. Successive jobs assigned to these nodes pile up in local FIFO queues, compounding queue delays and exacerbating variance (σ² = 243.75).", body_style))
+    story.append(Paragraph("<b>D. Deep Spatio-Temporal Heatmap Analysis (Figure 2)</b>", subsec_heading_style))
+    story.append(Paragraph("Figure 2 reveals the profound structural contrast in resource allocation across physical cluster racks. In Panel (c) (Round-Robin), severe horizontal saturation streaks exceeding 90% utilization persist across specific nodes for extended durations (e.g., Rack 0 nodes c10-c18). Because Round-Robin dispatches jobs blindly without inspecting node load or execution lengths, nodes that receive long-running scientific routines become stragglers. Successive jobs assigned to these nodes pile up in local FIFO queues, compounding queue delays and exacerbating variance (σ² = 243.75).", body_style))
     story.append(Paragraph("In contrast, Panel (a) demonstrates the smooth spatio-temporal dispersion achieved by our Proposed Hierarchical Balancer. By querying subtree minimum composite loads in O(log N) time, the scheduler dynamically guides jobs away from heavily loaded racks, maintaining a balanced core utilization pattern across all 4 racks (σ² = 181.77, a 25.4% improvement over Round-Robin). The bottom panel confirms that during high-arrival burst phases (e.g., t = 1.0h to 2.5h), the continuous variance trajectory of Round-Robin spikes to nearly 1,000, whereas the proposed algorithm clamps peak variance below 450.", body_style))
 
     story.append(Paragraph("<b>Table 3: Cross-Trace Workload Makespan & 95th-Percentile Tail Wait Latency Metrics</b>", subsec_heading_style))
@@ -841,28 +825,28 @@ Output: Updated tree T, number of tasks migrated num_migrated
     story.append(t3_table)
     story.append(Spacer(1, 3))
 
-    # Embed Figure 2
+    # Embed Figure 3 (Makespan Scaling)
     fig2_img_path = os.path.join(DATA_FIG_DIR, "fig2_makespan_vs_cluster_size.png")
     if os.path.exists(fig2_img_path):
         story.append(Image(fig2_img_path, width=420, height=195))
-        story.append(Paragraph("<b>Figure 2:</b> Workload Makespan vs. Cluster Size Scaling (N in {128, 256, 512, 1024} nodes). Illustrates convergence across cluster dimensions, highlighting makespan reductions at high cluster concurrency.", caption_style))
+        story.append(Paragraph("<b>Figure 3:</b> Workload Makespan vs. Cluster Size Scaling (N in {128, 256, 512, 1024} nodes). Illustrates convergence across cluster dimensions, highlighting makespan reductions at high cluster concurrency.", caption_style))
 
     story.append(PageBreak())
 
     # =========================================================================
-    # PAGE 12: FIGURE 3 (VARIANCE) + TABLE 4 (OVERHEAD & SCALABILITY)
+    # PAGE 12: FIGURE 4 (VARIANCE) + TABLE 4 (OVERHEAD & SCALABILITY)
     # =========================================================================
     story.append(Paragraph("IV. EXPERIMENTAL EVALUATION & RESULTS (Continued)", sec_heading_style))
-    story.append(Paragraph("<b>E. Continuous Variance Evolution Analysis (Figure 3)</b>", subsec_heading_style))
-    story.append(Paragraph("Figure 3 tracks the instantaneous cluster load variance σ²(t) evaluated at uniform 10-second sampling epochs across the entire workload lifecycle. Under Round-Robin and Centralized Work Queue policies, variance exhibits wild oscillations, frequently spiking above 150 due to localized queue saturation. Under our Proposed Hierarchical Balancer, the continuous variance curve stabilizes rapidly and remains tightly damped (mean: 181.7 on Curie, 222.1 on Thunder), proving that logarithmic tree steering prevents macro-level queue imbalances.", body_style))
+    story.append(Paragraph("<b>E. Continuous Variance Evolution Analysis (Figure 4)</b>", subsec_heading_style))
+    story.append(Paragraph("Figure 4 tracks the instantaneous cluster load variance σ²(t) evaluated at uniform 10-second sampling epochs across the entire workload lifecycle. Under Round-Robin and Centralized Work Queue policies, variance exhibits wild oscillations, frequently spiking above 150 due to localized queue saturation. Under our Proposed Hierarchical Balancer, the continuous variance curve stabilizes rapidly and remains tightly damped (mean: 181.7 on Curie, 222.1 on Thunder), proving that logarithmic tree steering prevents macro-level queue imbalances.", body_style))
 
-    # Embed Figure 3
+    # Embed Figure 4 (Variance Evolution)
     fig3_img_path = os.path.join(OG_FIG_DIR, "fig2_og_variance_trajectory.png")
     if not os.path.exists(fig3_img_path):
         fig3_img_path = os.path.join(DATA_FIG_DIR, "fig3_load_variance_over_time.png")
     if os.path.exists(fig3_img_path):
         story.append(Image(fig3_img_path, width=460, height=185))
-        story.append(Paragraph("<b>Figure 3:</b> Instantaneous Inter-Node Load Variance σ²(t) Over Execution Timeline (Hours) on Production Supercomputing Workload.", caption_style))
+        story.append(Paragraph("<b>Figure 4:</b> Instantaneous Inter-Node Load Variance σ²(t) Over Execution Timeline (Hours) on Production Supercomputing Workload.", caption_style))
     story.append(Spacer(1, 3))
 
     story.append(Paragraph("<b>Table 4: Scheduling Overhead & Scalability Complexity Analysis (N = 128 to 1,024 Nodes)</b>", subsec_heading_style))
@@ -888,28 +872,28 @@ Output: Updated tree T, number of tasks migrated num_migrated
     story.append(PageBreak())
 
     # =========================================================================
-    # PAGE 13: FIGURES 4 & 5 (SCALABILITY & CDF TAIL WAIT)
+    # PAGE 13: FIGURES 5 & 6 (SCALABILITY & CDF TAIL WAIT)
     # =========================================================================
     story.append(Paragraph("IV. EXPERIMENTAL EVALUATION & RESULTS (Continued)", sec_heading_style))
     story.append(Paragraph("<b>F. Dispatch Overhead Scalability & CDF Latency Analysis</b>", subsec_heading_style))
-    story.append(Paragraph("Figure 4 benchmarks the per-decision scheduling overhead across scaling cluster dimensions N in {128, 256, 512, 1024} nodes. As proved in Theorem 1, flat Least-Loaded Node (LLN) exhibits steep linear growth (O(N)), exceeding 0.64 ms per dispatch at N = 1,024 nodes and rising to multiple milliseconds at petascale. In contrast, our Proposed Hierarchical Balancer scales logarithmically (O(log N)), maintaining sub-millisecond latency (0.48 ms at N = 1,024). While Round-Robin remains the fastest in raw dispatch time (0.019 ms, O(1)), our framework delivers an optimal balance: fast logarithmic dispatch paired with superior load distribution.", body_style))
+    story.append(Paragraph("Figure 5 benchmarks the per-decision scheduling overhead across scaling cluster dimensions N in {128, 256, 512, 1024} nodes. As proved in Theorem 1, flat Least-Loaded Node (LLN) exhibits steep linear growth (O(N)), exceeding 0.64 ms per dispatch at N = 1,024 nodes and rising to multiple milliseconds at petascale. In contrast, our Proposed Hierarchical Balancer scales logarithmically (O(log N)), maintaining sub-millisecond latency (0.48 ms at N = 1,024). While Round-Robin remains the fastest in raw dispatch time (0.019 ms, O(1)), our framework delivers an optimal balance: fast logarithmic dispatch paired with superior load distribution.", body_style))
 
-    # Embed Figure 4
+    # Embed Figure 5 (Scalability)
     fig4_img_path = os.path.join(DATA_FIG_DIR, "fig4_scalability_analysis.png")
     if os.path.exists(fig4_img_path):
         story.append(Image(fig4_img_path, width=420, height=185))
-        story.append(Paragraph("<b>Figure 4:</b> Per-Decision Dispatch Overhead vs. Cluster Dimension (N Compute Nodes). Demonstrates O(log N) logarithmic scaling vs. O(N) linear degradation of flat array scans.", caption_style))
+        story.append(Paragraph("<b>Figure 5:</b> Per-Decision Dispatch Overhead vs. Cluster Dimension (N Compute Nodes). Demonstrates O(log N) logarithmic scaling vs. O(N) linear degradation of flat array scans.", caption_style))
     story.append(Spacer(1, 3))
 
-    story.append(Paragraph("Figure 5 illustrates the Cumulative Distribution Function (CDF) of job queuing wait times. The 95th-percentile SLA threshold line highlights the severe tail latency vulnerability of conventional schedulers. Under Round-Robin and Centralized Work Queue, jobs in the 95th percentile suffer wait times of 420.9s and 884.8s respectively on Curie. Our Proposed Hierarchical Balancer clamps the 95th-percentile tail latency to 346.7s on Curie and 223.2s on Thunder—an empirical reduction of 17.6% to 42.6% over Round-Robin.", body_style))
+    story.append(Paragraph("Figure 6 illustrates the Cumulative Distribution Function (CDF) of job queuing wait times. The 95th-percentile SLA threshold line highlights the severe tail latency vulnerability of conventional schedulers. Under Round-Robin and Centralized Work Queue, jobs in the 95th percentile suffer wait times of 420.9s and 884.8s respectively on Curie. Our Proposed Hierarchical Balancer clamps the 95th-percentile tail latency to 346.7s on Curie and 223.2s on Thunder—an empirical reduction of 17.6% to 42.6% over Round-Robin.", body_style))
 
-    # Embed Figure 5
+    # Embed Figure 6 (Wait Time CDF)
     fig5_img_path = os.path.join(OG_FIG_DIR, "fig3_og_wait_time_cdf.png")
     if not os.path.exists(fig5_img_path):
         fig5_img_path = os.path.join(DATA_FIG_DIR, "fig5_cdf_wait_times.png")
     if os.path.exists(fig5_img_path):
         story.append(Image(fig5_img_path, width=420, height=185))
-        story.append(Paragraph("<b>Figure 5:</b> Cumulative Distribution Function (CDF) of Job Queuing Wait Times comparing Proposed Balancer vs. Baselines. Illustrates significant compression of 95th-percentile tail wait latency.", caption_style))
+        story.append(Paragraph("<b>Figure 6:</b> Cumulative Distribution Function (CDF) of Job Queuing Wait Times comparing Proposed Balancer vs. Baselines. Illustrates significant compression of 95th-percentile tail wait latency.", caption_style))
 
     story.append(PageBreak())
 
